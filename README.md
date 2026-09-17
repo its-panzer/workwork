@@ -4,9 +4,15 @@
 
 A floating desktop companion for Claude Code, Codex, and Cursor. A draggable gem counts tasks waiting for you; click it to open a dashboard, review supported actions, or answer a question while playing.
 
-<img src="docs/images/workwork-demo.png" alt="workwork demo showing Claude Code, Codex, and Cursor tasks, a gem badge with two pending requests, and an approval for running tests." width="680" />
+<img src="docs/images/workwork-dashboard-wow.jpg" alt="Demo composite of the open workwork dashboard over World of Warcraft Classic's Westfall, showing fictional Claude Code, Codex, and Cursor tasks and an approval for running tests." width="960" />
 
-_Demo with fictional tasks. New installs start empty._
+_Open the pane to check activity, review an action, or answer a supported question._
+
+<img src="docs/images/workwork-jewel-wow.jpg" alt="Demo composite of the collapsed workwork jewel over Westfall, with a badge showing two tasks waiting for a response." width="960" />
+
+_Click the jewel to close the pane. The badge keeps waiting tasks in sight._
+
+Demo composites use fictional tasks and an official WoW Classic screenshot; they are not captures of a live game integration. New installs start empty. [Image credits and standalone captures](docs/images/README.md).
 
 workwork is a **macOS prototype** you can run from source or build as a Mac app. It uses a normal Electron window above the game and local agent hooks. It does not modify the game, read conversations, or make model calls. The turquoise and gold artwork is original; this project is not affiliated with Blizzard, Anthropic, OpenAI, Cursor, or cmux.
 
@@ -152,4 +158,4 @@ Original code and artwork are available under the [MIT License](LICENSE). Third-
 
 The adapters follow [Claude Code hooks](https://code.claude.com/docs/en/hooks), [Codex hooks](https://learn.chatgpt.com/docs/hooks), and [Cursor hooks](https://cursor.com/docs/hooks). cmux uses its [CLI](https://cmux.com/docs/api) and [workspace URL scheme](https://github.com/manaflow-ai/cmux/blob/main/Sources/CmuxSSHURLRequest.swift). The overlay uses Electron's [BrowserWindow](https://www.electronjs.org/docs/latest/api/browser-window).
 
-The [asset provenance](app/assets/README.md) includes the medallion generation prompt. No game logo, screenshot, or audio is bundled.
+The [asset provenance](app/assets/README.md) includes the medallion generation prompt. The app includes no game assets. Documentation composites contain a credited Blizzard screenshot; see [image credits](docs/images/README.md).

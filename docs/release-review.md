@@ -16,9 +16,9 @@ This release contains buildable source, original artwork, and synthetic tests. I
 
 ## Source and privacy boundary
 
-The publication set comes from `scripts/source-archive.cjs`, an explicit file manifest. It excludes runtime state, agent settings and backups, local notes, real-session captures, attachments, dependencies, and compiled apps. Source archives strip filesystem ownership and extended attributes. The README screenshot is captured from the isolated demo and contains only fictional tasks.
+The publication set comes from `scripts/source-archive.cjs`, an explicit file manifest. It excludes runtime state, agent settings and backups, local notes, real-session captures, attachments, dependencies, and compiled apps. Source archives strip filesystem ownership and extended attributes. The README interface captures come from the isolated demo and contain only fictional tasks.
 
-Only original artwork is included. PNG metadata is limited to rendering information; provenance is described in `app/assets/README.md`. No game logo, reference screenshot, or sound is bundled.
+The app includes only original artwork. PNG metadata is limited to rendering information; provenance is described in `app/assets/README.md`. Documentation composites use an official Blizzard screenshot as a static backdrop, with credit and separate ownership recorded in `docs/images/README.md` and `NOTICE`. The backdrop is not packaged in the app or covered by the MIT license. The composites do not establish in-game compatibility.
 
 The public repository starts with fresh Git history. Commits use a GitHub noreply address. Only the intended public repository owner appears in repository URLs; personal names, private email addresses, real home paths, private project names, and real session IDs are excluded.
 

@@ -12,5 +12,10 @@ Contents/Resources/app/licenses inside the app bundle.
 
 workwork is an independent project, not affiliated with or endorsed by
 Blizzard Entertainment, Anthropic, OpenAI, Cursor, or cmux. Their names and
-trademarks belong to their respective owners. No game logo, screenshot,
-audio, or other game asset is included.
+trademarks belong to their respective owners. The app contains no game assets.
+
+The documentation images docs/images/workwork-dashboard-wow.jpg and
+docs/images/workwork-jewel-wow.jpg include a World of Warcraft Classic
+screenshot copyright Blizzard Entertainment, Inc. That background is not
+covered by this repository's MIT license. The workwork interface and original
+artwork remain MIT-licensed. See docs/images/README.md for source attribution.
