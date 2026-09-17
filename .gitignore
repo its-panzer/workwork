@@ -1,0 +1,13 @@
+node_modules/
+artifacts/
+.DS_Store
+.env
+.env.*
+!.env.example
+*.log
+*.bak
+coverage/
+dist/
+build/
+.workwork/
+.impeccable.md

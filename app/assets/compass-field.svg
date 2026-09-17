@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="680" height="200" viewBox="0 0 680 200" fill="none">
+  <defs>
+    <radialGradient id="field"><stop stop-color="#127686"/><stop offset=".54" stop-color="#134651"/><stop offset="1" stop-color="#0c242c"/></radialGradient>
+    <pattern id="etch" width="42" height="32" patternUnits="userSpaceOnUse"><path d="M-10 16Q5 0 21 16T52 16M-10 20Q5 4 21 20T52 20" stroke="#9ed8cd" stroke-opacity=".045"/></pattern>
+  </defs>
+  <path fill="url(#field)" d="M0 0h680v200H0z"/>
+  <path fill="url(#etch)" d="M0 0h680v200H0z"/>
+  <g transform="translate(412 118)" stroke="#d5c088" stroke-opacity=".19">
+    <circle r="167"/><circle r="160" stroke-width="3"/><circle r="147"/><circle r="127" stroke-opacity=".11"/><circle r="118" stroke-opacity=".11"/>
+    <path d="M0-174V174M-174 0H174M-122-122L122 122M122-122L-122 122" stroke-opacity=".14"/>
+    <path d="M0-141 11-23 77-77 23-11 141 0 23 11 77 77 11 23 0 141-11 23-77 77-23 11-141 0-23-11-77-77-11-23Z" stroke-opacity=".12"/>
+    <g stroke-width="2"><path d="M0-152v-7M0 152v7M152 0h7M-152 0h-7M76-132l4-6M132-76l6-4M132 76l6 4M76 132l4 6M-76 132l-4 6M-132 76l-6 4M-132-76l-6-4M-76-132l-4-6"/></g>
+  </g>
+</svg>

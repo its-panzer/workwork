@@ -1,0 +1,11 @@
+node_modules/
+artifacts/
+coverage/
+dist/
+build/
+.workwork/
+.impeccable.md
+package-lock.json
+*.bak
+*.log
+.env*

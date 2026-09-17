@@ -1,0 +1,37 @@
+{
+  "name": "workwork",
+  "productName": "workwork",
+  "version": "0.1.0",
+  "private": true,
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/its-panzer/workwork.git"
+  },
+  "homepage": "https://github.com/its-panzer/workwork#readme",
+  "bugs": "https://github.com/its-panzer/workwork/issues",
+  "description": "A floating task monitor for Claude Code, Codex, and Cursor.",
+  "main": "app/main.cjs",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "start": "electron .",
+    "demo": "electron . --demo",
+    "build:icon": "node scripts/build-icon.cjs",
+    "build:mac": "node scripts/package-mac.cjs",
+    "test": "node --test test/*.test.cjs",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "check": "npm run format:check && npm test",
+    "source:archive": "node scripts/source-archive.cjs",
+    "setup": "node scripts/setup.cjs",
+    "smoke": "electron . --smoke",
+    "smoke:connections": "electron . --connections-smoke"
+  },
+  "devDependencies": {
+    "@electron/packager": "20.3.0",
+    "electron": "44.4.1",
+    "prettier": "3.9.7"
+  }
+}

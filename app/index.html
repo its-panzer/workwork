@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"
+    />
+    <title>workwork</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main id="panel" class="panel" hidden>
+      <span class="corner top-left" aria-hidden="true"></span
+      ><span class="corner top-right" aria-hidden="true"></span
+      ><span class="corner bottom-left" aria-hidden="true"></span
+      ><span class="corner bottom-right" aria-hidden="true"></span>
+      <div class="frame-crest" aria-hidden="true"><i></i><span>◇</span><i></i></div>
+      <header class="panel-header">
+        <div class="brand">
+          <h1>
+            <img
+              class="wordmark"
+              src="assets/workwork-wordmark.png"
+              alt="workwork"
+              width="2005"
+              height="386"
+              draggable="false"
+            />
+          </h1>
+          <div class="brand-rule" aria-hidden="true"><i></i><span>◆</span><i></i></div>
+        </div>
+      </header>
+      <div id="demo-banner" class="demo-banner" hidden>
+        <span><i></i>Preview with sample tasks</span
+        ><button id="reset-demo">Reset demo <span aria-hidden="true">↻</span></button>
+      </div>
+      <nav class="filters" aria-label="Task filter">
+        <button data-filter="all" class="selected">
+          All activity <span id="all-count">0</span></button
+        ><button data-filter="attention">Needs you <span id="attention-count">0</span></button
+        ><button data-filter="running">Working <span id="running-count">0</span></button
+        ><button data-filter="cmux">cmux <span id="cmux-count">0</span></button>
+      </nav>
+      <div class="workspace">
+        <section class="task-list" aria-label="Tasks">
+          <div class="list-heading">PARTY ACTIVITY <span aria-hidden="true">✦</span></div>
+          <div id="tasks"></div>
+        </section>
+        <section id="detail" class="detail" aria-label="Selected task"></section>
+      </div>
+      <div id="feedback" class="feedback" role="status" aria-live="polite" hidden></div>
+      <footer>
+        <button id="connections-button" class="connections-button">
+          Connections <span id="connection-count">0 / 3</span>
+        </button>
+        <aside
+          id="connections-tip"
+          class="first-run-tip connections-tip"
+          aria-label="Connect your agents"
+          hidden
+        >
+          <p id="connections-tip-text">
+            Connect your agents here.<br /><span>Set up Claude Code, Codex, and Cursor.</span>
+          </p>
+          <div class="tip-actions">
+            <button id="open-connections-tip" type="button">Open Connections</button
+            ><button id="dismiss-connections-tip" type="button">Not now</button>
+          </div>
+        </aside>
+        <span id="shortcut"></span>
+      </footer>
+    </main>
+    <div class="gem-drag" title="Drag to move" aria-hidden="true">
+      <span class="rim-top"></span><span class="rim-right"></span><span class="rim-bottom"></span
+      ><span class="rim-left"></span>
+    </div>
+    <button
+      id="gem"
+      class="gem-button"
+      type="button"
+      aria-label="Open workwork"
+      aria-controls="panel"
+      aria-expanded="false"
+      title="Open workwork"
+    >
+      <img class="gem-art" src="assets/workwork-medallion.png" alt="" draggable="false" />
+      <span id="badge" class="badge" hidden>0</span>
+    </button>
+    <aside id="gem-tip" class="first-run-tip gem-tip" aria-label="Jewel controls" hidden>
+      <p id="gem-tip-text">Click the jewel to open or close.<br /><span>Drag it to move.</span></p>
+      <button id="dismiss-gem-tip" type="button">Got it</button>
+    </aside>
+    <script src="provider-guides.js"></script>
+    <script src="renderer.js"></script>
+  </body>
+</html>

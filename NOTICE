@@ -1,0 +1,16 @@
+workwork
+Copyright (c) 2026 workwork contributors
+
+Original source code and artwork are provided under the MIT License.
+The illustrated wordmark, gem, and app icon were made with generative image
+tools. Asset provenance and generation prompts are in the source repository's
+app/assets/README.md.
+
+Electron and other dependencies remain subject to their own licenses.
+The Mac build retains Electron's LICENSE and LICENSES.chromium.html under
+Contents/Resources/app/licenses inside the app bundle.
+
+workwork is an independent project, not affiliated with or endorsed by
+Blizzard Entertainment, Anthropic, OpenAI, Cursor, or cmux. Their names and
+trademarks belong to their respective owners. No game logo, screenshot,
+audio, or other game asset is included.
