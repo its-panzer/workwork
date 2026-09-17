@@ -4,6 +4,10 @@
 
 A floating desktop companion for Claude Code, Codex, and Cursor. A draggable gem counts tasks waiting for you; click it to open a dashboard, review supported actions, or answer a question while playing.
 
+<img src="docs/images/workwork-demo.png" alt="workwork demo showing Claude Code, Codex, and Cursor tasks, a gem badge with two pending requests, and an approval for running tests." width="680" />
+
+_Demo with fictional tasks. New installs start empty._
+
 workwork is a **macOS prototype** you can run from source or build as a Mac app. It uses a normal Electron window above the game and local agent hooks. It does not modify the game, read conversations, or make model calls. The turquoise and gold artwork is original; this project is not affiliated with Blizzard, Anthropic, OpenAI, Cursor, or cmux.
 
 ## Run

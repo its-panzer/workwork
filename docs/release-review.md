@@ -16,7 +16,7 @@ This release contains buildable source, original artwork, and synthetic tests. I
 
 ## Source and privacy boundary
 
-The publication set comes from `scripts/source-archive.cjs`, an explicit file manifest. It excludes runtime state, agent settings and backups, local notes, captured screenshots, attachments, dependencies, and compiled apps. Source archives strip filesystem ownership and extended attributes.
+The publication set comes from `scripts/source-archive.cjs`, an explicit file manifest. It excludes runtime state, agent settings and backups, local notes, real-session captures, attachments, dependencies, and compiled apps. Source archives strip filesystem ownership and extended attributes. The README screenshot is captured from the isolated demo and contains only fictional tasks.
 
 Only original artwork is included. PNG metadata is limited to rendering information; provenance is described in `app/assets/README.md`. No game logo, reference screenshot, or sound is bundled.
 

@@ -11,6 +11,7 @@ const SOURCE_FILES = [
   '.prettierrc.json',
   '.github/workflows/ci.yml',
   'README.md',
+  'docs/images/workwork-demo.png',
   'package.json',
   'package-lock.json',
   'Launch workwork.command',
