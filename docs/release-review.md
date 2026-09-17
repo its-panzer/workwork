@@ -12,6 +12,7 @@ This release contains buildable source, original artwork, and synthetic tests. I
 - New installs have no task data or installed hooks. Receiver tests never create real task rows.
 - README starts with live setup; fictional demos remain opt-in. The MIT license and notices ship in the source archive and Mac app.
 - Mac packaging copies Electron notices after extracting the runtime, so a fresh checkout can build without first launching Electron.
+- Short windows use a compact header and spacing to keep a simple approval's controls visible. Desktop smoke checks cover 600px, 640px, and both sides of the 720px layout breakpoint.
 
 ## Source and privacy boundary
 

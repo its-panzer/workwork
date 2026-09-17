@@ -1054,17 +1054,50 @@ footer {
     width: min(300px, 100%);
   }
 }
-@media (max-height: 640px) {
+@media (max-height: 719px) {
   .panel-header {
-    padding-top: 15px;
-    padding-bottom: 12px;
-    min-height: 98px;
+    padding-block: 9px;
+    min-height: 78px;
   }
   .brand {
-    width: min(290px, 100%);
+    width: min(240px, 100%);
   }
   .detail {
-    padding-top: 16px;
+    padding-top: 8px;
+  }
+  .detail-topline {
+    margin-bottom: 6px;
+  }
+  .detail h2 {
+    margin-bottom: 6px;
+  }
+  .request-label {
+    margin-bottom: 6px;
+  }
+  .detail p.request-description {
+    margin: 6px 0 10px;
+  }
+  .command-header {
+    padding-block: 4px;
+  }
+  .command-block .request-preview {
+    padding-block: 7px;
+  }
+  .full-input {
+    margin-block: 6px;
+  }
+  .workspace-path {
+    padding-top: 6px;
+    margin-top: 6px;
+  }
+  .tool-label {
+    margin-bottom: 4px;
+  }
+  .actions {
+    margin-top: 10px;
+  }
+  .text-button {
+    padding-block: 9px;
   }
   .filters button {
     padding-block: 10px;

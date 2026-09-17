@@ -81,12 +81,24 @@ async function smokeTest(win, dir, setExpanded, snapshot, _root, routeLaunch) {
     'npm test',
   );
   await js(`document.querySelector('.full-input').open = false`);
-  assert.equal(
-    await js(
-      `{const d=document.querySelector('#detail'), b=[...d.querySelectorAll('button')].find(e=>e.textContent==='Continue in the app'); b.getBoundingClientRect().bottom <= d.getBoundingClientRect().bottom}`,
-    ),
-    true,
-  );
+  const dashboardBounds = win.getBounds();
+  for (const height of new Set([dashboardBounds.height, 720, 719, 640, 600])) {
+    win.setSize(dashboardBounds.width, height);
+    await until(() => js(`innerHeight === ${win.getContentBounds().height}`));
+    await js(`document.querySelector('#detail').scrollTop = 0`);
+    await js(`new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))`);
+    const layout = await js(`{const d=document.querySelector('#detail'),
+      b=[...d.querySelectorAll('button')].find(e=>e.textContent==='Continue in the app');
+      ({height:innerHeight,buttonTop:b.getBoundingClientRect().top,buttonBottom:b.getBoundingClientRect().bottom,
+        paneTop:d.getBoundingClientRect().top,paneBottom:d.getBoundingClientRect().bottom});}`);
+    if (height === 600) await capture('dashboard-compact.png');
+    assert.ok(
+      layout.buttonTop >= layout.paneTop && layout.buttonBottom <= layout.paneBottom,
+      JSON.stringify(layout),
+    );
+  }
+  win.setBounds(dashboardBounds);
+  await until(() => js(`innerHeight === ${win.getContentBounds().height}`));
   await capture('dashboard.png');
   await click('Allow once');
   await wait(120);
@@ -301,7 +313,7 @@ async function smokeTest(win, dir, setExpanded, snapshot, _root, routeLaunch) {
       'small pointer movement still counts as a click',
       'medallion and wordmark images load',
       'exact command and full input remain readable',
-      'approval handoff visible without scrolling',
+      'approval handoff visible without scrolling at 600px and taller',
       'approval response reduces badge',
       'question form responds and clears badge',
       'working and attention filters',
