@@ -16,6 +16,7 @@ let data,
   selected,
   filter = 'all',
   connections = false,
+  gameGuide = false,
   connectionBusy = false,
   initialized = false,
   taskSignature = '',
@@ -24,6 +25,7 @@ let data,
 let connectionsRequest = 0;
 const followupDrafts = new Map();
 const guideOpen = new Map();
+const gameGuideView = window.createGameGuide(api);
 
 function el(tag, className, text) {
   const element = document.createElement(tag);
@@ -60,7 +62,7 @@ function requestFor(task) {
 function render(next) {
   data = next;
   document.querySelectorAll('[data-filter]').forEach((button) => {
-    const active = button.dataset.filter === filter;
+    const active = button.dataset.filter === filter && !gameGuide;
     button.classList.toggle('selected', active);
     button.setAttribute('aria-pressed', String(active));
   });
@@ -71,9 +73,16 @@ function render(next) {
   if (data.connectionsRequest > connectionsRequest) {
     connectionsRequest = data.connectionsRequest;
     connections = true;
+    gameGuide = false;
     $('#detail').scrollTop = 0;
   }
-  $('.workspace').classList.toggle('show-connections', connections);
+  $('.workspace').classList.toggle('show-connections', connections || gameGuide);
+  $('#game-guide-button').classList.toggle('selected', gameGuide);
+  $('#game-guide-button').setAttribute('aria-pressed', String(gameGuide));
+  $('#detail').setAttribute(
+    'aria-label',
+    gameGuide ? 'Game guide' : connections ? 'Connections' : 'Selected task',
+  );
   $('#connections-button').setAttribute('aria-pressed', String(connections));
   document.body.classList.toggle('has-requests', data.waiting > 0);
   document.body.classList.toggle('expanded', data.expanded);
@@ -125,6 +134,7 @@ function render(next) {
       const row = button('', `task-row ${task.key === selected ? 'selected' : ''}`, () => {
         selected = task.key;
         connections = false;
+        gameGuide = false;
         render(data);
       });
       row.setAttribute('aria-pressed', String(task.key === selected));
@@ -168,13 +178,23 @@ function render(next) {
     receiving: Boolean(lastEvent && Date.now() - lastEvent < 15 * 60 * 1000),
   }));
   const signature = JSON.stringify(
-    connections
-      ? [connections, connectionSignature, connectionBusy, data.demo, data.cmux, data.cursorReview]
-      : request
-        ? [task?.key, request.id, connections]
-        : [task, connections, data.cursorReview, showWelcome],
+    gameGuide
+      ? ['game-guide']
+      : connections
+        ? [
+            connections,
+            connectionSignature,
+            connectionBusy,
+            data.demo,
+            data.cmux,
+            data.cursorReview,
+          ]
+        : request
+          ? [task?.key, request.id, connections]
+          : [task, connections, data.cursorReview, showWelcome],
   );
   const typingFollowup =
+    !gameGuide &&
     !connections &&
     !request &&
     task?.key === detailTaskKey &&
@@ -182,7 +202,8 @@ function render(next) {
   if (signature !== detailSignature && !typingFollowup) {
     detailSignature = signature;
     detailTaskKey = task?.key;
-    if (connections) renderConnections();
+    if (gameGuide) gameGuideView.mount($('#detail'));
+    else if (connections) renderConnections();
     else if (task) renderTask(task, request);
     else if (showWelcome) renderWelcome();
     else $('#detail').replaceChildren();
@@ -229,6 +250,7 @@ async function connectionAction(action, pending) {
   }
 }
 function openConnections() {
+  gameGuide = false;
   connections = true;
   $('#detail').scrollTop = 0;
   render(data);
@@ -767,6 +789,7 @@ $('#connections-button').addEventListener('click', () => {
 $('#reset-demo').addEventListener('click', () => {
   filter = 'all';
   connections = false;
+  gameGuide = false;
   selected = null;
   followupDrafts.clear();
   detailSignature = '';
@@ -779,9 +802,16 @@ document.querySelectorAll('[data-filter]').forEach((b) =>
   b.addEventListener('click', () => {
     filter = b.dataset.filter;
     connections = false;
+    gameGuide = false;
     render(data);
   }),
 );
+$('#game-guide-button').addEventListener('click', () => {
+  gameGuide = true;
+  connections = false;
+  render(data);
+  $('#detail').scrollTop = 0;
+});
 document.addEventListener('keydown', (event) => {
   if (event.key === 'Escape' && data?.expanded) api.toggle();
 });

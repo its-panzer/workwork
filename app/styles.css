@@ -321,8 +321,8 @@ button:disabled {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  min-height: 104px;
-  padding: 17px 65px 12px 27px;
+  min-height: 60px;
+  padding: 9px 65px 8px 27px;
   background: url('assets/compass-field.svg') center 48% / cover no-repeat;
   border-bottom: 1px solid #baa174;
   box-shadow:
@@ -340,7 +340,7 @@ button:disabled {
   position: relative;
   z-index: 1;
   display: inline-grid;
-  width: min(330px, 100%);
+  width: min(165px, 100%);
   min-width: 0;
   -webkit-app-region: drag;
 }
@@ -370,7 +370,7 @@ button:disabled {
   align-items: center;
   justify-self: stretch;
   gap: 6px;
-  margin: 9px 0 0;
+  margin: 4px 0 0;
   color: #d0b67e;
   font-size: 6px;
 }
@@ -1051,16 +1051,16 @@ footer {
     padding-inline: 15px;
   }
   .brand {
-    width: min(300px, 100%);
+    width: min(150px, 100%);
   }
 }
 @media (max-height: 719px) {
   .panel-header {
     padding-block: 9px;
-    min-height: 78px;
+    min-height: 52px;
   }
   .brand {
-    width: min(240px, 100%);
+    width: min(120px, 100%);
   }
   .detail {
     padding-top: 8px;
@@ -1130,4 +1130,228 @@ footer {
       transform: none;
     }
   }
+}
+
+#game-guide-button {
+  margin-left: auto;
+  color: #b1ddd8;
+}
+.game-guide {
+  max-width: 660px;
+  margin: 0 auto;
+}
+.game-guide h2 {
+  font-size: 25px;
+  margin-bottom: 5px;
+}
+.game-guide .guide-intro {
+  margin: 0 0 18px;
+  color: #aabdbc;
+  font-size: 13px;
+}
+.guide-tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 18px;
+}
+.guide-tabs button {
+  padding: 7px 14px;
+}
+.guide-tabs [aria-pressed='true'] {
+  background: #284540;
+  color: #f4dfa6;
+  border-color: #ad9459;
+}
+.guide-search,
+.guide-ask {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+}
+.guide-field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  flex: 1;
+  min-width: 0;
+  font-size: 12px;
+  color: #c6ceca;
+}
+.guide-field input,
+.guide-field select {
+  width: 100%;
+  min-width: 0;
+  background: #071a20;
+  color: #eee7d6;
+  border: 1px solid #4d6c71;
+  border-radius: 3px;
+  padding: 10px;
+  font: inherit;
+  font-size: 13px;
+  user-select: text;
+}
+.guide-search .primary,
+.guide-ask .primary {
+  padding: 9px 18px;
+  min-height: 38px;
+}
+.guide-examples {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 4px 0 12px;
+}
+.guide-examples .text-button {
+  font-size: 11px;
+  padding-block: 5px;
+}
+.guide-results {
+  display: grid;
+  gap: 0;
+}
+.guide-result {
+  display: grid;
+  grid-template-columns: 58px 1fr;
+  text-align: left;
+  border: 0;
+  border-top: 1px solid #526c6a55;
+  border-radius: 0;
+  background: transparent;
+  padding: 12px 3px;
+  gap: 2px 12px;
+}
+.guide-result:hover {
+  background: #1b373b;
+}
+.guide-result strong {
+  color: #eee2bf;
+  font-size: 14px;
+}
+.guide-result .eyebrow {
+  grid-row: span 2;
+  margin: 3px 0 0;
+  font-size: 8px;
+  align-self: start;
+}
+.guide-stats {
+  color: #9eb7b8;
+  font-size: 11px;
+}
+.guide-source {
+  background: transparent;
+  border: 0;
+  color: #a5d6d0;
+  text-align: left;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  padding: 8px 0;
+  font-size: 12px;
+}
+.guide-entry:not(:empty) {
+  margin-top: 18px;
+  padding: 18px;
+  border: 1px solid #8c794c;
+  background: #10282d;
+}
+.guide-entry h3,
+.guide-turn h3 {
+  margin: 0 0 10px;
+  font-size: 17px;
+  color: #f0dfb3;
+}
+.guide-entry .secondary {
+  display: block;
+  margin-top: 12px;
+}
+.game-guide .guide-entry-text,
+.game-guide .guide-answer {
+  white-space: pre-wrap;
+  line-height: 1.55;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+  user-select: text;
+}
+.game-guide .guide-note {
+  font-size: 11px;
+  color: #91a5a5;
+  line-height: 1.5;
+  margin: 18px 0 0;
+  display: block;
+}
+.game-guide .guide-status {
+  font-size: 12px;
+  color: #e1c68a;
+}
+.guide-status:empty {
+  display: none;
+}
+.guide-setup {
+  border-block: 1px solid #526c6a66;
+  padding: 12px 0;
+}
+.guide-setup summary {
+  cursor: pointer;
+  color: #dbc48d;
+  font-size: 13px;
+}
+.guide-setup p {
+  font-size: 12px;
+}
+.guide-setup-form {
+  display: grid;
+  gap: 12px;
+}
+.guide-setup-form .primary {
+  justify-self: start;
+}
+.guide-context {
+  color: #a9bfba;
+  font-size: 12px;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin: 16px 0;
+}
+.guide-context .text-button {
+  padding: 0;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+.guide-turn {
+  padding: 16px 0;
+  border-top: 1px solid #526c6a66;
+}
+.guide-citations {
+  display: flex;
+  flex-direction: column;
+  align-items: start;
+}
+.guide-ask {
+  margin-top: 18px;
+}
+@media (max-width: 610px) {
+  .filters {
+    gap: 12px;
+    padding-inline: 18px;
+  }
+}
+.guide-results {
+  max-height: 240px;
+  overflow-y: auto;
+}
+.guide-key-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+  margin-bottom: 10px;
+}
+.guide-transcript {
+  max-height: 180px;
+  overflow-y: auto;
+}
+.guide-ask {
+  position: sticky;
+  bottom: 0;
+  background: #0c222a;
+  padding: 10px 0;
 }

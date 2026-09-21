@@ -14,7 +14,7 @@ _Click the jewel to close the pane. The badge keeps waiting tasks in sight._
 
 Demo composites use fictional tasks and an official WoW Classic screenshot; they are not captures of a live game integration. New installs start empty. [Image credits and standalone captures](docs/images/README.md).
 
-workwork is a **macOS prototype** you can run from source or build as a Mac app. It uses a normal Electron window above the game and local agent hooks. It does not modify the game, read conversations, or make model calls. The turquoise and gold artwork is original; this project is not affiliated with Blizzard, Anthropic, OpenAI, Cursor, or cmux.
+workwork is a **macOS prototype** you can run from source or build as a Mac app. It uses a normal Electron window above the game and local agent hooks. It does not modify the game or read coding conversations. The built-in Game guide offers public database lookups and optional model-backed conversations. The turquoise and gold artwork is original; this project is not affiliated with Blizzard, Anthropic, OpenAI, Cursor, or cmux.
 
 ## Run
 
@@ -131,6 +131,19 @@ A queued response has not yet been acknowledged. **Response sent** means the wai
 
 MCP forms support strings, booleans, numbers, integers, and primitive enums. More complex schemas return to the source app. A “Turn ended” signal does not establish that tests passed or all background work stopped. Quiet active tasks become **No recent signal** after 15 minutes; stored rows expire after 24 hours.
 
+## Game guide
+
+Open **Game guide** beside the activity filters. It is a built-in companion for WoW Forever, independent of your coding agents and the jewel's pending-task count.
+
+- **Lookup:** search quest, item, NPC, spell or zone names without an account or API key. Select a result for its database summary. Items include stats; quests include text and start/end map points when the source supplies them. **Open full entry** opens the Forever page for more detail.
+- **Conversation:** open **Conversation setup**, choose OpenAI or Anthropic, and enter a model ID available to your API account and your API key. Save, then ask a question or choose **Ask about this** on a lookup result. Follow-up questions retain the last three exchanges. **New conversation** clears them; **Clear entry** removes the selected topic.
+
+Get a key from [OpenAI's API dashboard](https://platform.openai.com/api-keys) or [Anthropic's Console](https://console.anthropic.com/settings/keys). API billing and model access are separate from a ChatGPT, Claude, Codex or Cursor subscription. No key is included. Setup does not call the model; submitting a question does. An unselected question uses one model call to choose a search phrase and another for the answer. Selecting an entry skips the search-phrase call.
+
+Answers use retrieved sources with numbered links. Queries go to Wowhead; conversation questions, recent guide messages and retrieved game data go to your selected model provider. Coding task data is never included. Keys are encrypted locally with Electron's macOS secure storage and saved with owner-only permissions. **Remove saved key** deletes that configuration. Conversations and the five-minute lookup cache stay in memory and disappear when the app quits.
+
+The source is [Wowhead's Forever database](https://www.wowhead.com/forever), using its public search pages and [documented item XML feed](https://www.wowhead.com/tooltips). Blizzard's [published Classic API namespaces](https://community.developer.battle.net/api/pages/content/documentation/world-of-warcraft-classic/guides/namespaces.json) did not list Forever when checked on September 21, 2026. The guide never substitutes Retail or another Classic database. Search-page parsing can break if Wowhead changes its markup; source links remain available. Beta values, incomplete entries and AI errors are possible. This is not live character telemetry, a DPS simulator, or an in-game automation agent.
+
 ## Local data
 
 workwork stores preferences and task metadata in `~/.workwork/`, using owner-only file permissions. `WORKWORK_HOME` overrides this directory; the app and its hooks must share the same value. `WORKWORK_NODE` can point to a Node executable when connecting agents from the app.
@@ -146,7 +159,7 @@ npm run smoke:connections
 npm run source:archive
 ```
 
-Tests use synthetic inputs and isolated settings. They do not call models or answer real requests. Electron smoke tests require a desktop session and save captures to ignored `artifacts/`. The archive command writes `artifacts/workwork-source.tar.gz` from an explicit file allowlist; it excludes installed dependencies, runtime state, and local screenshots.
+Tests use synthetic inputs and isolated settings. Guide tests use fixture provider responses; they do not call paid models or answer real requests. Live database probes are separate from the automated suite. Electron smoke tests require a desktop session and save captures to ignored `artifacts/`. The archive command writes `artifacts/workwork-source.tar.gz` from an explicit file allowlist; it excludes installed dependencies, runtime state, and local screenshots.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for the code map and [the release review](docs/release-review.md) for verification and current limits.
 

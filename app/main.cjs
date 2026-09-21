@@ -9,11 +9,14 @@ const {
   screen,
   shell,
   clipboard,
+  safeStorage,
 } = require('electron');
 const fs = require('node:fs');
 const path = require('node:path');
 const os = require('node:os');
 const { execFile } = require('node:child_process');
+const { GameGuide, sourceURL } = require('../src/game-guide.cjs');
+const { GuideChat } = require('../src/guide-chat.cjs');
 const { StatusStore, PROVIDERS } = require('../src/events.cjs');
 const { demoData } = require('../src/demo.cjs');
 const { dataRoot, readJSON, atomicJSON, drainEvents } = require('../src/storage.cjs');
@@ -39,6 +42,12 @@ app.setPath('userData', path.join(app.getPath('appData'), 'workwork'));
 // Every preview gets its own profile and instance lock. Starting a demo must
 // never hand off to the live overlay or expose real requests as sample tasks.
 if (demo || connectionSmoke) app.setPath('userData', path.join(root, 'electron'));
+const gameGuide = new GameGuide();
+const guideChat = new GuideChat({
+  file: path.join(root, 'game-guide.json'),
+  encryption: safeStorage,
+  guide: gameGuide,
+});
 const stateFile = path.join(root, 'state.json');
 const prefsFile = path.join(root, 'preferences.json');
 let preferences = windowPreferences(readJSON(prefsFile, {}));
@@ -290,6 +299,26 @@ async function openApp(provider, key) {
   );
 }
 function registerIPC() {
+  const guideHandler = (name, action) =>
+    ipcMain.handle(name, async (event, ...args) => {
+      if (event.sender !== win.webContents || event.senderFrame !== win.webContents.mainFrame)
+        return { ok: false, error: 'Untrusted guide request.' };
+      try {
+        return { ok: true, value: await action(...args) };
+      } catch (error) {
+        return { ok: false, error: error.message || 'The guide is unavailable.' };
+      }
+    });
+  guideHandler('guide-search', (query) => gameGuide.search(query));
+  guideHandler('guide-detail', (type, id) => gameGuide.detail(type, id));
+  guideHandler('guide-open', (url) => shell.openExternal(sourceURL(url)));
+  guideHandler('guide-status', () => guideChat.status());
+  guideHandler('guide-configure', (config) => guideChat.save(config));
+  guideHandler('guide-ask', (question, context) => guideChat.ask(question, context));
+  guideHandler('guide-clear', (removeKey) => {
+    if (typeof removeKey !== 'boolean') throw Error('Invalid conversation action.');
+    return guideChat.clear(removeKey);
+  });
   ipcMain.on('gem-pointer', (event, gesture) => {
     if (event.sender !== win.webContents || !gesture || typeof gesture !== 'object') return;
     if (gesture.phase === 'start') {

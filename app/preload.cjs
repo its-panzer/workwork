@@ -1,5 +1,12 @@
 const { contextBridge, ipcRenderer } = require('electron');
 contextBridge.exposeInMainWorld('workwork', {
+  guideSearch: (query) => ipcRenderer.invoke('guide-search', query),
+  guideDetail: (type, id) => ipcRenderer.invoke('guide-detail', type, id),
+  guideOpen: (url) => ipcRenderer.invoke('guide-open', url),
+  guideStatus: () => ipcRenderer.invoke('guide-status'),
+  guideConfigure: (config) => ipcRenderer.invoke('guide-configure', config),
+  guideAsk: (question, context) => ipcRenderer.invoke('guide-ask', question, context),
+  guideClear: (removeKey) => ipcRenderer.invoke('guide-clear', removeKey),
   snapshot: () => ipcRenderer.invoke('snapshot'),
   toggle: () => ipcRenderer.invoke('toggle'),
   gemPointer: (event) => ipcRenderer.send('gem-pointer', event),

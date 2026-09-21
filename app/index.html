@@ -36,12 +36,13 @@
         <span><i></i>Preview with sample tasks</span
         ><button id="reset-demo">Reset demo <span aria-hidden="true">↻</span></button>
       </div>
-      <nav class="filters" aria-label="Task filter">
+      <nav class="filters" aria-label="Dashboard views">
         <button data-filter="all" class="selected">
           All activity <span id="all-count">0</span></button
         ><button data-filter="attention">Needs you <span id="attention-count">0</span></button
         ><button data-filter="running">Working <span id="running-count">0</span></button
         ><button data-filter="cmux">cmux <span id="cmux-count">0</span></button>
+        <button id="game-guide-button" aria-pressed="false">Game guide</button>
       </nav>
       <div class="workspace">
         <section class="task-list" aria-label="Tasks">
@@ -93,6 +94,7 @@
       <button id="dismiss-gem-tip" type="button">Got it</button>
     </aside>
     <script src="provider-guides.js"></script>
+    <script src="game-guide.js"></script>
     <script src="renderer.js"></script>
   </body>
 </html>

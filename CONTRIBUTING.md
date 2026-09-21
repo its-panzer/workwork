@@ -10,6 +10,7 @@ Use Node.js 22.12.0 or newer and install the locked dependencies with `npm ci`. 
 - `src/requests.cjs` validates actionable requests and responses. `hooks/request.cjs` waits for a decision and returns the provider's hook result.
 - `src/connections.cjs` inspects connections; `scripts/setup.cjs` merges hook settings and backs them up.
 - `src/cmux.cjs` reads session metadata and produces supported navigation URLs.
+- `app/game-guide.js` owns the built-in guide view. `src/game-guide.cjs` retrieves public Forever data; `src/guide-chat.cjs` handles optional model calls, source references and encrypted key configuration. Keep network access in the main process and cover source markup changes with synthetic fixtures.
 - `src/demo.cjs` holds sample data. `test/` uses temporary homes and synthetic events.
 - `scripts/package-mac.cjs` stages an explicit runtime allowlist and builds the Mac app. `scripts/build-icon.cjs` generates the `.icns` using macOS tools. Runtime hooks stay outside ASAR so ordinary Node can execute them.
 

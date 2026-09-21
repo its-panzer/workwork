@@ -10,6 +10,14 @@ Status events retain provider/session identity, project basename, lifecycle stat
 
 Do not attach `~/.workwork`, agent configuration files, config backups, raw request JSON, or screenshots of real task inputs to public issues. Reproduce with synthetic data. Disconnect hooks before removing or moving the checkout, especially Cursor's optional fail-closed review gates.
 
+## Game guide networking
+
+Only the main process fetches public game data. Wowhead requests are bounded by time and response size; redirects must remain in the Forever database. Remote scripts and HTML never run in the renderer. Source links are restricted to the Forever database; two exact provider API-key setup URLs are also allowed. Search results are cached only in memory.
+
+Optional conversation requests go only to the selected provider's fixed HTTPS API endpoint, with redirects disabled. Keys are encrypted using Electron `safeStorage` and written with owner-only permissions to `~/.workwork/game-guide.json`; encryption being unavailable prevents saving. The renderer receives the configured provider/model, never a stored key. macOS secure storage does not protect against malicious processes already acting as the same logged-in user.
+
+Questions, the last three guide exchanges, and selected or retrieved public game entries go to the model provider. Coding task data is not passed to the guide. OpenAI requests set `store: false`; the provider's own data policies still apply. No model tools, shell execution, game control, or filesystem access are exposed. Model answers are untrusted text; citations link to retrieved source entries. Conversation history remains in memory and can be cleared, along with the saved key, from the guide.
+
 ## Reporting a problem
 
 For a suspected vulnerability, use [private vulnerability reporting](https://github.com/its-panzer/workwork/security/advisories/new). A public report should omit working exploits involving real approvals, credentials, and private task data. No response-time commitment has been set for this prototype.

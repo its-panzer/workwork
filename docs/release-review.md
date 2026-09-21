@@ -41,3 +41,9 @@ The final publication check also verifies the committed file manifest, clean com
 - Agent question dialogs outside supported hooks remain in the source app. Follow-ups are copied for manual pasting.
 - Disconnect before moving the app, checkout, or Node runtime; installed hooks contain absolute paths.
 - Local Mac builds use ad-hoc signing. Developer ID signing and notarization are separate distribution work. Intel builds require validation on an Intel Mac.
+
+## Game guide update — September 21, 2026
+
+The wordmark is half its previous width and the standard header is 60px high, down from 104px. A separate Game guide view adds Forever database search and optional OpenAI/Anthropic conversations. Source identifiers remain stable across follow-up answers. Guide requests cannot access coding task data or execute actions.
+
+Validation for this update: 73 unit tests and the Electron UI smoke suite passed; a separate live probe exercised the renderer-to-main lookup path for Sticks and Bones, including its start/end map points. Item, NPC and spell details were also checked against Wowhead Forever. Conversation transport, follow-up context, encrypted-key configuration, error handling and citations were tested with simulated provider replies; no paid model call was made. The Apple Silicon app built and passed bundle-signature and packaged-runtime checks. Existing platform and notarization limits still apply.

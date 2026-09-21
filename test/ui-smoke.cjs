@@ -299,11 +299,14 @@ async function smokeTest(win, dir, setExpanded, snapshot, _root, routeLaunch) {
   await until(() =>
     js(`document.querySelector('#detail').textContent.includes('Your coding apps')`),
   );
+  await require('./game-guide-ui-smoke.cjs').guideSmoke(win, dir);
   const report = {
     passed: true,
     checks: [
       'native always-on-top window',
       'four task rows',
+      'half-size wordmark and compact header',
+      'game lookup, conversation, sources, navigation and draft persistence',
       'header controls removed',
       'first-run jewel tip appears and dismisses',
       'gem does not overlap native drag regions',
