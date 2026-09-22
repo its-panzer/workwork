@@ -17,9 +17,11 @@ test('Windows hook transport protects special characters and recognizes only exa
   const command = windowsHook(node, script, 'claude', 'SessionStart');
   assert.match(
     command,
-    /^powershell\.exe -NoLogo -NoProfile -NonInteractive -EncodedCommand [A-Za-z0-9+/=]+$/,
+    /^[A-Za-z]:\/[^ ]+\/System32\/WindowsPowerShell\/v1\.0\/powershell\.exe -NoLogo -NoProfile -NonInteractive -EncodedCommand [A-Za-z0-9+/=]+$/,
   );
   assert.equal(windowsHookNode(command, script, 'claude', 'SessionStart'), node);
+  const legacy = command.replace(/^[^ ]+/, 'powershell.exe');
+  assert.equal(windowsHookNode(legacy, script, 'claude', 'SessionStart'), node);
   assert.equal(windowsHookNode(command + ' && echo x', script, 'claude', 'SessionStart'), null);
   assert.equal(windowsHookNode(command, script, 'codex', 'SessionStart'), null);
   assert.equal(windowsHookNode(command, script + '.backup', 'claude', 'SessionStart'), null);
@@ -59,6 +61,8 @@ test(
   (t) => {
     const root = fs.mkdtempSync(path.join(os.tmpdir(), "ww O'Brien & $test % ! `-"));
     t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+    // A project-local executable must not shadow the system PowerShell launcher.
+    fs.writeFileSync(path.join(root, 'powershell.exe'), 'not an executable');
     const script = path.join(root, 'hook with spaces.cjs');
     fs.writeFileSync(
       script,

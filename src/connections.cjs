@@ -13,13 +13,14 @@ const CHECK_PREFIX = 'workwork-check-';
 function resolveNode() {
   const candidates = nodeCandidates();
   try {
-    candidates.push(
-      execFileSync('node', ['-p', 'process.execPath'], {
-        encoding: 'utf8',
-        timeout: 3000,
-        windowsHide: true,
-      }).trim(),
-    );
+    if (process.platform !== 'win32')
+      candidates.push(
+        execFileSync('node', ['-p', 'process.execPath'], {
+          encoding: 'utf8',
+          timeout: 3000,
+          windowsHide: true,
+        }).trim(),
+      );
   } catch {}
   for (const candidate of candidates.filter(Boolean)) {
     try {

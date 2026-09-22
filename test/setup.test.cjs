@@ -108,7 +108,7 @@ test('install and remove preserve a symlinked settings file and update its targe
   fs.symlinkSync('../managed-settings.json', file);
   const [result] = configure({ install: true, provider: 'claude', home: root });
   assert.equal(fs.lstatSync(file).isSymbolicLink(), true);
-  assert.equal(fs.readlinkSync(file), '../managed-settings.json');
+  assert.equal(fs.readlinkSync(file), path.normalize('../managed-settings.json'));
   assert.equal(fs.readFileSync(result.backup, 'utf8'), original);
   assert.ok(JSON.parse(fs.readFileSync(target, 'utf8')).hooks.SessionStart);
   configure({ remove: true, provider: 'claude', home: root });

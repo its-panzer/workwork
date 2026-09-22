@@ -38,7 +38,7 @@ test('source archive includes the manifest and optional license but excludes loc
   assert.equal(output, path.join(root, 'artifacts', 'workwork-source.tar.gz'));
   const entries = execFileSync('tar', ['-tzf', output], { encoding: 'utf8' })
     .trim()
-    .split('\n')
+    .split(/\r?\n/)
     .filter((entry) => !entry.endsWith('/'))
     .sort();
   assert.deepEqual(entries, files.map((file) => `workwork/${file}`).sort());

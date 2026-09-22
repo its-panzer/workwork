@@ -1,8 +1,14 @@
 const path = require('node:path');
 
-const POWERSHELL_PREFIX = 'powershell.exe -NoLogo -NoProfile -NonInteractive -EncodedCommand ';
+const systemRoot = process.env.SystemRoot || process.env.WINDIR || 'C:\\Windows';
+const systemPowerShell = path.win32
+  .join(systemRoot, 'System32', 'WindowsPowerShell', 'v1.0', 'powershell.exe')
+  .replace(/\\/g, '/');
+const POWERSHELL_PREFIX = `${systemPowerShell} -NoLogo -NoProfile -NonInteractive -EncodedCommand `;
 const psQuote = (value) => `'${value.replace(/'/g, "''")}'`;
 function windowsHook(node, script, provider, event) {
+  if (!/^[A-Za-z]:\/[A-Za-z0-9_./-]+$/.test(systemPowerShell))
+    throw Error('The Windows system directory cannot be safely invoked from every agent shell.');
   if (
     ![node, script, provider, event].every(
       (value) => typeof value === 'string' && !/[\0\r\n]/.test(value),
@@ -15,14 +21,19 @@ function windowsHook(node, script, provider, event) {
   return POWERSHELL_PREFIX + Buffer.from(payload, 'utf16le').toString('base64');
 }
 function windowsHookNode(command, script, provider, event) {
-  if (typeof command !== 'string' || !command.startsWith(POWERSHELL_PREFIX)) return null;
-  const encoded = command.slice(POWERSHELL_PREFIX.length);
+  if (typeof command !== 'string') return null;
+  const prefix = [
+    POWERSHELL_PREFIX,
+    'powershell.exe -NoLogo -NoProfile -NonInteractive -EncodedCommand ',
+  ].find((prefix) => command.startsWith(prefix));
+  if (!prefix) return null;
+  const encoded = command.slice(prefix.length);
   if (encoded.length > 32768 || !/^[A-Za-z0-9+/]+={0,2}$/.test(encoded)) return null;
   const payload = Buffer.from(encoded, 'base64').toString('utf16le');
   const node = payload.match(/\$hookInput \| & '((?:[^']|'')*)' /)?.[1]?.replace(/''/g, "'");
   return node &&
     path.win32.isAbsolute(node) &&
-    windowsHook(node, script, provider, event) === command
+    windowsHook(node, script, provider, event).replace(POWERSHELL_PREFIX, prefix) === command
     ? node
     : null;
 }
@@ -38,6 +49,10 @@ function nodeCandidates({
       if (directory) candidates.push(path.win32.join(directory, 'nodejs', 'node.exe'));
     if (env.LOCALAPPDATA)
       candidates.push(path.win32.join(env.LOCALAPPDATA, 'Programs', 'nodejs', 'node.exe'));
+    for (const directory of (env.Path || env.PATH || '').split(';')) {
+      const clean = directory.replace(/^"|"$/g, '');
+      if (path.win32.isAbsolute(clean)) candidates.push(path.win32.join(clean, 'node.exe'));
+    }
   } else candidates.push('/opt/homebrew/bin/node', '/usr/local/bin/node');
   return [...new Set(candidates.filter(Boolean))];
 }

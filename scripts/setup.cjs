@@ -74,7 +74,13 @@ function hookPlan(home = os.homedir(), node = process.execPath, { cursorReview =
         const hook = {
           type: 'command',
           command: command(request ? 'request.cjs' : 'emit.cjs', def.provider, event),
-          timeout: request ? 125 : process.platform === 'win32' ? 5 : 2,
+          timeout: request
+            ? 125
+            : process.platform === 'win32'
+              ? def.provider === 'codex' && ['SessionEnd', 'Interrupt'].includes(event)
+                ? 3
+                : 5
+              : 2,
         };
         const groups =
           def.provider === 'cursor'
