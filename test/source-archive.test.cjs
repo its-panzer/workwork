@@ -1,6 +1,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
+const { canSymlink } = require('./symlink-support.cjs');
 const os = require('node:os');
 const path = require('node:path');
 const zlib = require('node:zlib');
@@ -48,6 +49,7 @@ test('source archive includes the manifest and optional license but excludes loc
     const header = tar.subarray(offset, offset + 512);
     if (header.every((byte) => byte === 0)) break;
     const field = (start, length) => header.toString('utf8', start, start + length).split('\0')[0];
+    assert.equal(parseInt(field(100, 8), 8), field(0, 100).endsWith('.command') ? 0o755 : 0o644);
     assert.equal(parseInt(field(108, 8), 8), 0);
     assert.equal(parseInt(field(116, 8), 8), 0);
     assert.ok(['', 'root'].includes(field(265, 32)));
@@ -61,7 +63,8 @@ test('source archive includes the manifest and optional license but excludes loc
     fs.readFileSync(path.join(unpacked, 'workwork/LICENSE'), 'utf8'),
     'Fixture license\n',
   );
-  assert.ok(fs.statSync(path.join(unpacked, 'workwork/Launch workwork.command')).mode & 0o111);
+  if (process.platform !== 'win32')
+    assert.ok(fs.statSync(path.join(unpacked, 'workwork/Launch workwork.command')).mode & 0o111);
 });
 
 test('source archive fails for missing required files and never follows source symlinks', (t) => {
@@ -69,11 +72,12 @@ test('source archive fails for missing required files and never follows source s
   const source = path.join(root, 'app/main.cjs');
   fs.unlinkSync(source);
   assert.throws(() => sourceFiles(root), { code: 'ENOENT' });
+  if (!canSymlink(t, root)) return;
   fs.symlinkSync(path.join(root, 'README.md'), source);
   assert.throws(() => sourceFiles(root), /refuses symbolic links/);
   fs.unlinkSync(source);
   fs.writeFileSync(source, 'fixture\n');
   fs.renameSync(path.join(root, 'app/assets'), path.join(root, 'private-assets'));
-  fs.symlinkSync(path.join(root, 'private-assets'), path.join(root, 'app/assets'));
+  fs.symlinkSync(path.join(root, 'private-assets'), path.join(root, 'app/assets'), 'dir');
   assert.throws(() => sourceFiles(root), /refuses symbolic links/);
 });

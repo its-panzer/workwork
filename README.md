@@ -14,7 +14,7 @@ _Click the jewel to close the pane. The badge keeps waiting tasks in sight._
 
 Demo composites use fictional tasks and an official WoW Classic screenshot; they are not captures of a live game integration. New installs start empty. [Image credits and standalone captures](docs/images/README.md).
 
-workwork is a **macOS prototype** you can run from source or build as a Mac app. It uses a normal Electron window above the game and local agent hooks. It does not modify the game or read coding conversations. The built-in Game guide offers public database lookups and optional model-backed conversations. The turquoise and gold artwork is original; this project is not affiliated with Blizzard, Anthropic, OpenAI, Cursor, or cmux.
+workwork is a **desktop prototype for macOS and Windows** you can run from source or build as a Mac app. It uses a normal Electron window above the game and local agent hooks. It does not modify the game or read coding conversations. The built-in Game guide offers public database lookups and optional model-backed conversations. The turquoise and gold artwork is original; this project is not affiliated with Blizzard, Anthropic, OpenAI, Cursor, or cmux.
 
 ## Run
 
@@ -39,7 +39,7 @@ The demo uses fictional tasks in an isolated temporary profile. Its buttons do n
 
 Click the jewel to open or close the pane. Drag the jewel or the expanded title area to move it. The badge counts observed requests, not running tasks. **⌘ Shift Space** toggles the pane; the menu bar provides Open, Collapse, Hide, and Quit. First-run tips introduce the jewel and **Connections**.
 
-Use a windowed or borderless game for initial testing. Behavior over the actual WoW Forever client, exclusive fullscreen, and Windows has not been verified.
+Use a windowed or borderless game for initial testing. Behavior over the actual WoW Forever client and exclusive fullscreen has not been verified.
 
 ## Build the Mac app
 
@@ -60,6 +60,29 @@ The build creates `dist/workwork-darwin-arm64/workwork.app` on Apple Silicon, or
 Keep Node installed: the app includes Electron, while agent hooks run with Node outside the app. Homebrew's standard Node locations are detected even when launching from Finder. Moving the app or changing the Node installation requires disconnecting and reconnecting hooks. Quit the installed app before replacing it with a new build at the same path.
 
 The build uses a local ad-hoc signature, verifies the bundle, and starts the packaged runtime when building for the current Mac's architecture. It is **not Apple-notarized**; a public downloadable release still needs Developer ID signing, hardened runtime configuration, and notarization. No Apple account or certificate is required to build locally. The icon master is `app/assets/workwork-icon.png`; `npm run build:icon` regenerates every macOS icon size and the `.icns` file.
+
+## Build the Windows app
+
+Use native Windows 10/11 with Node.js **22.12.0 or newer**. In PowerShell, from this checkout:
+
+```powershell
+npm.cmd ci
+npm.cmd run build:windows
+```
+
+The build creates `dist/workwork-win32-x64/workwork.exe` and `dist/workwork-windows-x64.zip` on an x64 PC. The complete folder is portable: extract it somewhere stable, such as a folder under your user profile, and launch **workwork.exe**. Keep all its DLLs and `resources` beside it. You can create a desktop shortcut to the executable. It does not need administrator privileges or an installer.
+
+A Windows build is also available as the **workwork-windows-x64** artifact of a successful [Checks run](https://github.com/its-panzer/workwork/actions/workflows/ci.yml). These are unsigned test builds, not signed installers; Windows may show an unknown-publisher or SmartScreen warning. Do not run an untrusted download.
+
+The Windows app has its own icon, notification-area menu and **Ctrl Shift Space** shortcut. The jewel still drags and toggles the pane. Use a windowed or borderless game; an ordinary desktop overlay cannot promise display over exclusive fullscreen.
+
+Keep Node installed for agent hooks. The app checks the configured `WORKWORK_NODE`, standard Node install locations and `PATH`. Open **Connections** for native Windows Claude Code, Codex and Cursor. The generated hooks use a PowerShell launcher that safely passes JSON and paths to Node, even when the originating agent uses a different shell. Review/reload those changed commands in Codex. No execution-policy change or administrator access is required.
+
+Windows settings live under `%USERPROFILE%\.claude`, `%USERPROFILE%\.codex` and `%USERPROFILE%\.cursor`; workwork data lives in `%USERPROFILE%\.workwork`. **WSL agents are not automatically connected**: their home, Node runtime and processes are separate. cmux session discovery is Mac-only and its controls are hidden on Windows. For CLI tasks, return to your existing terminal; workwork does not launch a replacement session. **Open app** recognizes standard desktop Cursor/Codex executable locations and otherwise asks you to switch manually.
+
+Quit before replacing the app. Disconnect hooks before moving its folder; reconnect after moving so paths are updated. No personal settings, API keys or sessions are shipped in the build. Game guide lookups work without a key; optional conversation keys use Windows DPAPI via Electron secure storage.
+
+`npm run build:windows -- --arch=arm64` can produce an ARM64 build. The default cross-build from macOS/Linux targets x64; runtime checks require Windows of the target architecture. Linux cross-builds also need the `zip` command. Native ARM64 and real-game compatibility require separate testing.
 
 ## Connect your agents
 
@@ -140,13 +163,13 @@ Open **Game guide** beside the activity filters. It is a built-in companion for 
 
 Get a key from [OpenAI's API dashboard](https://platform.openai.com/api-keys) or [Anthropic's Console](https://console.anthropic.com/settings/keys). API billing and model access are separate from a ChatGPT, Claude, Codex or Cursor subscription. No key is included. Setup does not call the model; submitting a question does. An unselected question uses one model call to choose a search phrase and another for the answer. Selecting an entry skips the search-phrase call.
 
-Answers use retrieved sources with numbered links. Queries go to Wowhead; conversation questions, recent guide messages and retrieved game data go to your selected model provider. Coding task data is never included. Keys are encrypted locally with Electron's macOS secure storage and saved with owner-only permissions. **Remove saved key** deletes that configuration. Conversations and the five-minute lookup cache stay in memory and disappear when the app quits.
+Answers use retrieved sources with numbered links. Queries go to Wowhead; conversation questions, recent guide messages and retrieved game data go to your selected model provider. Coding task data is never included. Keys are encrypted locally with Electron's operating-system secure storage (Keychain on macOS, DPAPI on Windows). **Remove saved key** deletes that configuration. Conversations and the five-minute lookup cache stay in memory and disappear when the app quits.
 
 The source is [Wowhead's Forever database](https://www.wowhead.com/forever), using its public search pages and [documented item XML feed](https://www.wowhead.com/tooltips). Blizzard's [published Classic API namespaces](https://community.developer.battle.net/api/pages/content/documentation/world-of-warcraft-classic/guides/namespaces.json) did not list Forever when checked on September 21, 2026. The guide never substitutes Retail or another Classic database. Search-page parsing can break if Wowhead changes its markup; source links remain available. Beta values, incomplete entries and AI errors are possible. This is not live character telemetry, a DPS simulator, or an in-game automation agent.
 
 ## Local data
 
-workwork stores preferences and task metadata in `~/.workwork/`, using owner-only file permissions. `WORKWORK_HOME` overrides this directory; the app and its hooks must share the same value. `WORKWORK_NODE` can point to a Node executable when connecting agents from the app.
+workwork stores preferences and task metadata in `~/.workwork/`, using owner-only file modes on macOS/Linux and inherited profile-directory access controls on Windows. `WORKWORK_HOME` overrides this directory; the app and its hooks must share the same value. `WORKWORK_NODE` can point to a Node executable when connecting agents from the app.
 
 Persisted task events contain identity, project basename, status, timestamps, and optional cmux pane IDs. Pending requests temporarily contain the tool input or question needed for review. Hook completion removes the request and answer files; the running app also cleans abandoned files. It cannot clean files while it is stopped. See [SECURITY.md](SECURITY.md) for the local trust boundary and what to omit from bug reports.
 

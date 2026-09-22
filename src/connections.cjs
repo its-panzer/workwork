@@ -7,18 +7,18 @@ const { hookPlan, configure, isOurs } = require('../scripts/setup.cjs');
 const { atomicJSON, readJSON } = require('./storage.cjs');
 const { validEvent } = require('./events.cjs');
 const { pendingRequests, submitDecision } = require('./requests.cjs');
+const { nodeCandidates } = require('./platform.cjs');
 const ROOT = path.resolve(__dirname, '..');
 const CHECK_PREFIX = 'workwork-check-';
 function resolveNode() {
-  const candidates = [
-    !process.versions.electron && process.execPath,
-    process.env.WORKWORK_NODE,
-    '/opt/homebrew/bin/node',
-    '/usr/local/bin/node',
-  ];
+  const candidates = nodeCandidates();
   try {
     candidates.push(
-      execFileSync('node', ['-p', 'process.execPath'], { encoding: 'utf8', timeout: 3000 }).trim(),
+      execFileSync('node', ['-p', 'process.execPath'], {
+        encoding: 'utf8',
+        timeout: 3000,
+        windowsHide: true,
+      }).trim(),
     );
   } catch {}
   for (const candidate of candidates.filter(Boolean)) {
@@ -27,6 +27,7 @@ function resolveNode() {
       const version = execFileSync(real, ['-p', 'process.versions.node'], {
         encoding: 'utf8',
         timeout: 3000,
+        windowsHide: true,
       }).trim();
       if (supportedNode(version)) return real;
     } catch {}
@@ -224,7 +225,7 @@ class Connections {
       const child = execFile(
         this.runtime(),
         [path.join(ROOT, 'hooks', 'emit.cjs'), provider, event],
-        { env: { ...process.env, WORKWORK_HOME: this.root }, timeout: 3000 },
+        { env: { ...process.env, WORKWORK_HOME: this.root }, timeout: 3000, windowsHide: true },
         (error) => {
           if (error) finish(false);
         },

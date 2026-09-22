@@ -114,6 +114,7 @@ function render(next) {
   $('#all-count').textContent = data.tasks.length;
   $('#attention-count').textContent = data.waiting;
   $('#running-count').textContent = data.tasks.filter((t) => t.status === 'running').length;
+  $('[data-filter="cmux"]').hidden = data.platform !== 'darwin';
   $('#cmux-count').textContent = data.tasks.filter((t) => t.terminal?.kind === 'cmux').length;
   $('#connection-count').textContent = data.demo
     ? 'Preview'
@@ -266,6 +267,14 @@ function connectionGuide(provider, installed, lastEvent) {
   const steps = el('ol', 'connection-steps');
   for (const step of guide.steps) steps.append(el('li', '', step));
   details.append(steps, el('p', 'connection-note', guide.help));
+  if (data.platform === 'win32')
+    details.append(
+      el(
+        'p',
+        'connection-note',
+        'Windows hooks use an encoded PowerShell launcher for Node. Reload and trust these commands in the agent. Use native Windows sessions; WSL has separate settings.',
+      ),
+    );
   return details;
 }
 function renderConnections() {
@@ -451,7 +460,15 @@ function renderConnections() {
       'Open session jumps to the exact pane. Direct send and interrupt are not implemented. Copy a follow-up and paste it in the session.',
     ),
   );
-  d.append(terminal);
+  if (data.platform === 'darwin') d.append(terminal);
+  else
+    d.append(
+      el(
+        'p',
+        'connection-note',
+        'On Windows, use native Windows agents with this app. WSL sessions use a separate home and are not connected automatically. Return to the existing terminal for CLI sessions.',
+      ),
+    );
   d.append(
     el(
       'p',

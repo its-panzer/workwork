@@ -3,6 +3,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const os = require('node:os');
 const { atomicJSON, readJSON, dataRoot } = require('../src/storage.cjs');
+const { windowsHook, windowsHookNode } = require('../src/platform.cjs');
 const ROOT = path.resolve(__dirname, '..');
 const quote = (value) =>
   process.platform === 'win32'
@@ -11,7 +12,9 @@ const quote = (value) =>
 
 function hookPlan(home = os.homedir(), node = process.execPath, { cursorReview = false } = {}) {
   const command = (file, provider, event) =>
-    `${quote(node)} ${quote(path.join(ROOT, 'hooks', file))} ${provider} ${event}`;
+    process.platform === 'win32'
+      ? windowsHook(node, path.join(ROOT, 'hooks', file), provider, event)
+      : `${quote(node)} ${quote(path.join(ROOT, 'hooks', file))} ${provider} ${event}`;
   const definitions = [
     {
       provider: 'claude',
@@ -71,7 +74,7 @@ function hookPlan(home = os.homedir(), node = process.execPath, { cursorReview =
         const hook = {
           type: 'command',
           command: command(request ? 'request.cjs' : 'emit.cjs', def.provider, event),
-          timeout: request ? 125 : 2,
+          timeout: request ? 125 : process.platform === 'win32' ? 5 : 2,
         };
         const groups =
           def.provider === 'cursor'
@@ -98,6 +101,26 @@ const OWN_COMMAND_SUFFIXES = hookPlan('', '', { cursorReview: true }).flatMap((p
 );
 function isOurs(command) {
   if (typeof command !== 'string') return false;
+  if (process.platform === 'win32') {
+    return hookPlan('', '', { cursorReview: true }).some((plan) =>
+      Object.entries(plan.additions).some(([event, groups]) => {
+        const request = [
+          'PermissionRequest',
+          'Elicitation',
+          'beforeShellExecution',
+          'beforeMCPExecution',
+        ].includes(event);
+        const files = request
+          ? ['request.cjs']
+          : event === 'PreToolUse' && plan.provider === 'claude'
+            ? ['emit.cjs', 'request.cjs']
+            : ['emit.cjs'];
+        return files.some((file) =>
+          windowsHookNode(command, path.join(ROOT, 'hooks', file), plan.provider, event),
+        );
+      }),
+    );
+  }
   return OWN_COMMAND_SUFFIXES.some((suffix) => {
     if (!command.endsWith(suffix)) return false;
     const quotedNode = command.slice(0, -suffix.length);

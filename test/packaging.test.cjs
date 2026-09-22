@@ -4,7 +4,7 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const { execFileSync } = require('node:child_process');
-const { APP_FILES, stageApplication } = require('../scripts/package-mac.cjs');
+const { APP_FILES, stageApplication } = require('../scripts/stage-application.cjs');
 const { drainEvents } = require('../src/storage.cjs');
 
 test('packaged runtime excludes local files and its hooks run using external Node', (t) => {
@@ -27,17 +27,20 @@ test('packaged runtime excludes local files and its hooks run using external Nod
     false,
   );
   assert.equal(fs.existsSync(path.join(destination, 'app/assets/workwork.icns')), true);
+  assert.equal(fs.existsSync(path.join(destination, 'app/assets/workwork.ico')), true);
   assert.match(fs.readFileSync(path.join(destination, 'LICENSE'), 'utf8'), /MIT License/);
   assert.equal(
     JSON.parse(fs.readFileSync(path.join(destination, 'package.json'))).devDependencies,
     undefined,
   );
   const { hookPlan } = require(path.join(destination, 'scripts/setup.cjs'));
-  assert.ok(
-    hookPlan(fixture, process.execPath)[0].additions.SessionStart[0].hooks[0].command.includes(
-      destination,
-    ),
-  );
+  const generated = hookPlan(fixture, process.execPath)[0].additions.SessionStart[0].hooks[0]
+    .command;
+  const decoded =
+    process.platform === 'win32'
+      ? Buffer.from(generated.split(' ').at(-1), 'base64').toString('utf16le')
+      : generated;
+  assert.ok(decoded.includes(destination));
   const data = path.join(fixture, 'data');
   const output = execFileSync(
     process.execPath,

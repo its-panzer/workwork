@@ -216,7 +216,7 @@ window.createGameGuide = function (api) {
     node(
       'p',
       'guide-note',
-      'The key is encrypted locally using macOS secure storage. Guide conversations stay in memory and clear when workwork quits.',
+      'The key is encrypted locally using your operating system’s secure storage. Guide conversations stay in memory and clear when workwork quits.',
     ),
   );
   const context = node('div', 'guide-context');

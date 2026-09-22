@@ -1,6 +1,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
+const { canSymlink } = require('./symlink-support.cjs');
 const os = require('node:os');
 const path = require('node:path');
 const { hookPlan, mergeHooks, configure, isOurs } = require('../scripts/setup.cjs');
@@ -65,9 +66,15 @@ test('configuration installation keeps exact backups and uninstall removes only 
   assert.deepEqual(JSON.parse(fs.readFileSync(file, 'utf8')).hooks, {});
 });
 test('ownership recognizes only generated hook invocations, including an older Node path', () => {
-  const plan = hookPlan('/fixture-home', "/older/runtime's/bin/custom-node", {
-    cursorReview: true,
-  })[0];
+  const plan = hookPlan(
+    '/fixture-home',
+    process.platform === 'win32'
+      ? "C:\\older\\runtime's\\node.exe"
+      : "/older/runtime's/bin/custom-node",
+    {
+      cursorReview: true,
+    },
+  )[0];
   const command = plan.additions.SessionStart[0].hooks[0].command;
   assert.equal(isOurs(command), true);
   const script = path.resolve(__dirname, '../hooks/emit.cjs');
@@ -76,8 +83,12 @@ test('ownership recognizes only generated hook invocations, including an older N
     `echo '${script}.backup'`,
     `${command} && echo done`,
     `echo ${command}`,
-    command.replace('SessionStart', 'DifferentEvent'),
-    command.replace('emit.cjs', 'emit.cjs.backup'),
+    ...(process.platform === 'win32'
+      ? [command.slice(0, -4) + 'AAAA']
+      : [
+          command.replace('SessionStart', 'DifferentEvent'),
+          command.replace('emit.cjs', 'emit.cjs.backup'),
+        ]),
   ];
   for (const command of foreign) assert.equal(isOurs(command), false, command);
   const original = {
@@ -93,6 +104,7 @@ test('install and remove preserve a symlinked settings file and update its targe
     file = path.join(root, '.claude', 'settings.json');
   const original = '{\n  "custom": true\n}\n';
   fs.writeFileSync(target, original);
+  if (!canSymlink(t, root)) return;
   fs.symlinkSync('../managed-settings.json', file);
   const [result] = configure({ install: true, provider: 'claude', home: root });
   assert.equal(fs.lstatSync(file).isSymbolicLink(), true);
@@ -111,6 +123,7 @@ test('dangling settings symlinks are rejected before any provider is changed', (
   const claude = path.join(root, '.claude', 'settings.json'),
     cursor = path.join(root, '.cursor', 'hooks.json');
   fs.writeFileSync(claude, '{"custom":true}');
+  if (!canSymlink(t, root)) return;
   fs.symlinkSync('missing.json', cursor);
   assert.throws(() => configure({ install: true, home: root }), /dangling symlink/);
   assert.equal(fs.readFileSync(claude, 'utf8'), '{"custom":true}');
@@ -126,6 +139,7 @@ test('symlink retargeting during setup cannot overwrite either target', (t) => {
     second = path.join(root, 'second.json');
   fs.writeFileSync(first, '{"custom":true}');
   fs.writeFileSync(second, '{"custom":true}');
+  if (!canSymlink(t, root)) return;
   fs.symlinkSync(first, file);
   const copy = fs.copyFileSync;
   t.mock.method(fs, 'copyFileSync', (...args) => {

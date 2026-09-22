@@ -46,7 +46,7 @@ test('keys stay out of status, missing secure storage refuses saving, removal cl
   chat.save(config);
   assert.equal(JSON.stringify(chat.status()).includes(config.key), false);
   assert.equal(fs.readFileSync(file, 'utf8').includes(config.key), false);
-  assert.equal(fs.statSync(file).mode & 0o777, 0o600);
+  if (process.platform !== 'win32') assert.equal(fs.statSync(file).mode & 0o777, 0o600);
   assert.throws(() => chat.save({ ...config, provider: 'evil' }), /valid model/);
   chat.clear(true);
   assert.equal(fs.existsSync(file), false);

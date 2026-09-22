@@ -1,6 +1,6 @@
 # Contributing to workwork
 
-Use Node.js 22.12.0 or newer and install the locked dependencies with `npm ci`. macOS is the currently exercised desktop platform.
+Use Node.js 22.12.0 or newer and install the locked dependencies with `npm ci`. macOS and native Windows are desktop targets; WSL integration is not implemented.
 
 ## Code map
 
@@ -9,10 +9,11 @@ Use Node.js 22.12.0 or newer and install the locked dependencies with `npm ci`. 
 - `src/events.cjs` normalizes status metadata and maintains task history. `src/task-model.cjs` shares provider, project-name, and ordering rules.
 - `src/requests.cjs` validates actionable requests and responses. `hooks/request.cjs` waits for a decision and returns the provider's hook result.
 - `src/connections.cjs` inspects connections; `scripts/setup.cjs` merges hook settings and backs them up.
+- `src/platform.cjs` handles Windows hook transport, Node discovery and known app paths. Its shell round-trip test runs only on Windows.
 - `src/cmux.cjs` reads session metadata and produces supported navigation URLs.
 - `app/game-guide.js` owns the built-in guide view. `src/game-guide.cjs` retrieves public Forever data; `src/guide-chat.cjs` handles optional model calls, source references and encrypted key configuration. Keep network access in the main process and cover source markup changes with synthetic fixtures.
 - `src/demo.cjs` holds sample data. `test/` uses temporary homes and synthetic events.
-- `scripts/package-mac.cjs` stages an explicit runtime allowlist and builds the Mac app. `scripts/build-icon.cjs` generates the `.icns` using macOS tools. Runtime hooks stay outside ASAR so ordinary Node can execute them.
+- `scripts/stage-application.cjs` stages the explicit runtime allowlist shared by `scripts/package-mac.cjs` and `scripts/package-windows.cjs`. `scripts/build-icon.cjs` regenerates `.icns` and the multi-size Windows `.ico` from the same original artwork using macOS tools; Windows builds use the committed `.ico`. Runtime hooks stay outside ASAR so ordinary Node can execute them.
 
 Keep provider differences in the adapters. Reject unsupported request shapes and return control to the source app. Never convert a timeout, missing process, or parse error into approval. Preserve other tools' settings and hooks.
 
@@ -23,10 +24,11 @@ npm run format
 npm run check
 npm run smoke
 npm run smoke:connections
-npm run build:mac
+npm run build:mac       # macOS
+npm run build:windows   # native Windows or cross-build
 ```
 
-`check` runs formatting validation and the Node test suite, including execution of a staged app's hook with external Node. The two smoke commands need a graphical desktop session; they use separate Electron profiles and fixture agent settings. Do not replace those fixtures with a real home directory. The Mac build needs macOS and produces a locally signed app and ZIP in ignored `dist/`. CI runs the build and desktop checks on macOS.
+`check` runs formatting validation and the Node test suite, including execution of a staged app's hook with external Node. The two smoke commands need a graphical desktop session; they use separate Electron profiles and fixture agent settings. Do not replace those fixtures with a real home directory. The Mac build needs macOS and produces a locally signed app and ZIP in ignored `dist/`. CI runs build and desktop checks on macOS and Windows, plus unit tests on Linux. A Windows CI artifact contains the portable ZIP. Cross-building checks packaging only; it does not verify a Windows launch.
 
 When changing approval handling, cover the provider output, timeout/fallback behavior, duplicate decisions, and request correlation. Keep tool inputs and conversation contents out of committed fixtures and screenshots. For visual changes, inspect the expanded pane, collapsed gem, and request forms; passing tests alone does not establish layout quality.
 

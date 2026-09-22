@@ -2,7 +2,7 @@
 const setupGuides = {
   claude: {
     description:
-      'Activity, tool approvals, and supported questions. Works in cmux and other terminals.',
+      'Activity, tool approvals, and supported questions. Works in native terminal sessions.',
     steps: [
       'Click Connect here, or use Connect all three, to install the local hooks.',
       'Open or resume Claude Code. Complete its normal workspace trust prompt if one appears; hook changes usually load automatically.',
@@ -12,7 +12,7 @@ const setupGuides = {
   },
   codex: {
     description:
-      'Activity and supported approvals from standalone Codex or Codex in cmux. Questions stay in Codex.',
+      'Activity and supported approvals from standalone Codex or Codex in a terminal. Questions stay in Codex.',
     steps: [
       'Click Connect here, or use Connect all three, to install the local hooks.',
       'In the Codex app, open Settings → Hooks → Reload hooks. In the Codex CLI, open /hooks.',

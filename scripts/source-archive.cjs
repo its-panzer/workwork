@@ -1,8 +1,7 @@
 #!/usr/bin/env node
 const fs = require('node:fs');
-const os = require('node:os');
 const path = require('node:path');
-const { execFileSync } = require('node:child_process');
+const { gzipSync } = require('node:zlib');
 
 // Keep this list explicit: adding a local file must never silently publish it.
 const SOURCE_FILES = [
@@ -34,12 +33,15 @@ const SOURCE_FILES = [
   'app/assets/workwork-wordmark.png',
   'app/assets/workwork-icon.png',
   'app/assets/workwork.icns',
+  'app/assets/workwork.ico',
   'hooks/emit.cjs',
   'hooks/request.cjs',
   'scripts/setup.cjs',
   'scripts/source-archive.cjs',
   'scripts/build-icon.cjs',
   'scripts/package-mac.cjs',
+  'scripts/stage-application.cjs',
+  'scripts/package-windows.cjs',
   'src/game-guide.cjs',
   'src/guide-chat.cjs',
   'test/game-guide.test.cjs',
@@ -53,6 +55,9 @@ const SOURCE_FILES = [
   'src/storage.cjs',
   'src/task-model.cjs',
   'src/window-state.cjs',
+  'src/platform.cjs',
+  'test/platform.test.cjs',
+  'test/symlink-support.cjs',
   'test/cmux.test.cjs',
   'test/connections.test.cjs',
   'test/connections-smoke.cjs',
@@ -101,41 +106,37 @@ function sourceFiles(root) {
 
 function createSourceArchive(root = path.resolve(__dirname, '..')) {
   const files = sourceFiles(root);
-  const staging = fs.mkdtempSync(path.join(os.tmpdir(), 'workwork-source-'));
   const output = path.join(root, 'artifacts', 'workwork-source.tar.gz');
-  try {
-    const source = path.join(staging, 'workwork');
-    for (const file of files) {
-      const destination = path.join(source, file);
-      fs.mkdirSync(path.dirname(destination), { recursive: true, mode: 0o755 });
-      fs.copyFileSync(path.join(root, file), destination);
-      fs.chmodSync(destination, file.endsWith('.command') ? 0o755 : 0o644);
-    }
-    const version = execFileSync('tar', ['--version'], { encoding: 'utf8' });
-    const ownerArgs = version.includes('bsdtar')
-      ? ['--uid', '0', '--gid', '0', '--uname', 'root', '--gname', 'root']
-      : ['--owner=0', '--group=0', '--numeric-owner'];
-    const temporaryArchive = path.join(staging, 'workwork-source.tar.gz');
-    execFileSync(
-      'tar',
-      [
-        ...ownerArgs,
-        '--no-acls',
-        '--no-xattrs',
-        '-czf',
-        temporaryArchive,
-        '-C',
-        staging,
-        'workwork',
-      ],
-      { env: { ...process.env, COPYFILE_DISABLE: '1' }, stdio: 'pipe' },
-    );
-    fs.mkdirSync(path.dirname(output), { recursive: true });
-    fs.copyFileSync(temporaryArchive, output);
-    return { output, files };
-  } finally {
-    fs.rmSync(staging, { recursive: true, force: true });
+  // Write portable ustar headers explicitly: Windows has no POSIX chmod/uid,
+  // and host tar implementations disagree on ownership/extended attributes.
+  const records = [];
+  for (const file of files) {
+    const name = `workwork/${file}`;
+    if (Buffer.byteLength(name) > 100) throw Error(`Archive path is too long: ${file}`);
+    const content = fs.readFileSync(path.join(root, file));
+    const header = Buffer.alloc(512);
+    const octal = (value, offset, size) =>
+      header.write(value.toString(8).padStart(size - 1, '0') + '\0', offset, size, 'ascii');
+    header.write(name, 0, 100, 'utf8');
+    octal(file.endsWith('.command') ? 0o755 : 0o644, 100, 8);
+    octal(0, 108, 8);
+    octal(0, 116, 8);
+    octal(content.length, 124, 12);
+    octal(0, 136, 12);
+    header.fill(32, 148, 156);
+    header[156] = 48;
+    header.write('ustar\0', 257, 6, 'ascii');
+    header.write('00', 263, 2, 'ascii');
+    header.write('root', 265, 32, 'ascii');
+    header.write('root', 297, 32, 'ascii');
+    const checksum = header.reduce((sum, byte) => sum + byte, 0);
+    header.write(checksum.toString(8).padStart(6, '0') + '\0 ', 148, 8, 'ascii');
+    records.push(header, content, Buffer.alloc((512 - (content.length % 512)) % 512));
   }
+  records.push(Buffer.alloc(1024));
+  fs.mkdirSync(path.dirname(output), { recursive: true });
+  fs.writeFileSync(output, gzipSync(Buffer.concat(records)));
+  return { output, files };
 }
 
 if (require.main === module) {

@@ -17,6 +17,7 @@ const os = require('node:os');
 const { execFile } = require('node:child_process');
 const { GameGuide, sourceURL } = require('../src/game-guide.cjs');
 const { GuideChat } = require('../src/guide-chat.cjs');
+const { windowsAppPaths } = require('../src/platform.cjs');
 const { StatusStore, PROVIDERS } = require('../src/events.cjs');
 const { demoData } = require('../src/demo.cjs');
 const { dataRoot, readJSON, atomicJSON, drainEvents } = require('../src/storage.cjs');
@@ -38,6 +39,7 @@ const root =
   demo || connectionSmoke ? fs.mkdtempSync(path.join(os.tmpdir(), 'workwork-demo-')) : dataRoot();
 // Source and packaged launches share one live profile and instance lock.
 app.setName('workwork');
+if (process.platform === 'win32') app.setAppUserModelId('app.workwork.desktop');
 app.setPath('userData', path.join(app.getPath('appData'), 'workwork'));
 // Every preview gets its own profile and instance lock. Starting a demo must
 // never hand off to the live overlay or expose real requests as sample tasks.
@@ -76,7 +78,7 @@ const connectionManager = demo
       ...(connectionSmoke ? { home: path.join(root, 'fixture-home') } : {}),
       onChange: () => broadcast(),
     });
-const cmux = demo || connectionSmoke ? null : new CmuxSessions();
+const cmux = demo || connectionSmoke || process.platform !== 'darwin' ? null : new CmuxSessions();
 let anchor;
 let gemDrag = null;
 let programmaticBounds = null;
@@ -181,6 +183,11 @@ function createWindow() {
   programmaticBounds = bounds();
   win = new BrowserWindow({
     ...programmaticBounds,
+    icon: path.join(
+      __dirname,
+      'assets',
+      process.platform === 'win32' ? 'workwork.ico' : 'workwork-icon.png',
+    ),
     title: presentationDemo ? 'workwork — Demo' : 'workwork',
     frame: false,
     transparent: true,
@@ -246,7 +253,10 @@ function createTray() {
         buffer[i + 2] = 93;
         buffer[i + 3] = 255;
       }
-  const icon = nativeImage.createFromBitmap(buffer, { width: size, height: size, scaleFactor: 1 });
+  const icon =
+    process.platform === 'win32'
+      ? nativeImage.createFromPath(path.join(__dirname, 'assets/workwork.ico'))
+      : nativeImage.createFromBitmap(buffer, { width: size, height: size, scaleFactor: 1 });
   if (process.platform === 'darwin') icon.setTemplateImage(true);
   tray = new Tray(icon);
   tray.setToolTip('workwork');
@@ -281,6 +291,13 @@ async function openApp(provider, key) {
           resolve({ ok: !error, message: 'This session is no longer listed as open. Check cmux.' }),
         ),
       );
+  }
+  if (process.platform === 'win32') {
+    for (const candidate of windowsAppPaths(provider)) {
+      if (!fs.existsSync(candidate)) continue;
+      const error = await shell.openPath(candidate);
+      if (!error) return { ok: true, message: `Opened ${labels[provider]}. Select this task.` };
+    }
   }
   if (process.platform !== 'darwin')
     return { ok: false, message: `Switch to ${labels[provider]} to continue.` };

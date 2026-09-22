@@ -27,7 +27,8 @@
     "source:archive": "node scripts/source-archive.cjs",
     "setup": "node scripts/setup.cjs",
     "smoke": "electron . --smoke",
-    "smoke:connections": "electron . --connections-smoke"
+    "smoke:connections": "electron . --connections-smoke",
+    "build:windows": "node scripts/package-windows.cjs"
   },
   "devDependencies": {
     "@electron/packager": "20.3.0",
