@@ -6,6 +6,7 @@ const { gzipSync } = require('node:zlib');
 // Keep this list explicit: adding a local file must never silently publish it.
 const SOURCE_FILES = [
   '.gitignore',
+  '.gitattributes',
   '.prettierignore',
   '.prettierrc.json',
   '.github/workflows/ci.yml',
