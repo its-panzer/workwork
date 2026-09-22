@@ -35,7 +35,7 @@ The final publication check also verifies the committed file manifest, clean com
 
 ## Scope limits
 
-- macOS is the exercised desktop platform. WoW Forever window/fullscreen behavior and Windows remain unverified.
+- macOS and Windows x64 desktop behavior have automated coverage. Actual WoW Forever window/fullscreen behavior remains unverified.
 - Setup uses default agent configuration directories and the standard cmux application path.
 - Cursor uses its own approval policy by default. Optional extra reviews gate every shell/MCP action; native questions remain in Cursor.
 - Agent question dialogs outside supported hooks remain in the source app. Follow-ups are copied for manual pasting.
@@ -47,3 +47,11 @@ The final publication check also verifies the committed file manifest, clean com
 The wordmark is half its previous width and the standard header is 60px high, down from 104px. A separate Game guide view adds Forever database search and optional OpenAI/Anthropic conversations. Source identifiers remain stable across follow-up answers. Guide requests cannot access coding task data or execute actions.
 
 Validation for this update: 73 unit tests and the Electron UI smoke suite passed; a separate live probe exercised the renderer-to-main lookup path for Sticks and Bones, including its start/end map points. Item, NPC and spell details were also checked against Wowhead Forever. Conversation transport, follow-up context, encrypted-key configuration, error handling and citations were tested with simulated provider replies; no paid model call was made. The Apple Silicon app built and passed bundle-signature and packaged-runtime checks. Existing platform and notarization limits still apply.
+
+## Windows port — September 21, 2026
+
+Windows builds now include a native executable and icon, notification-area menu, Ctrl Shift Space shortcut, and portable ZIP packaging. Native Windows Claude Code, Codex and Cursor hooks use a system PowerShell launcher that preserves JSON and paths across Command Prompt, PowerShell and Git Bash. Node discovery and app opening use Windows locations; cmux discovery remains Mac-only. WSL agents are separate and are not automatically connected.
+
+The source archive and both app packages share explicit file manifests, excluding local settings, credentials and task data. Windows conversations use Electron secure storage backed by DPAPI. Windows builds are unsigned, run without elevation, and do not change PowerShell execution policy.
+
+Verification is recorded in the Windows, macOS and Linux jobs of the [Checks workflow](https://github.com/its-panzer/workwork/actions/workflows/ci.yml). Native Windows tests cover shell transport, installed hooks and an approval response. Desktop smoke tests use temporary profiles and synthetic requests; they do not establish compatibility with real agent sessions or games. Windows ARM64, WSL integration, code signing and interactive testing inside WoW remain outside this verification.

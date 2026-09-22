@@ -14,7 +14,7 @@ _Click the jewel to close the pane. The badge keeps waiting tasks in sight._
 
 Demo composites use fictional tasks and an official WoW Classic screenshot; they are not captures of a live game integration. New installs start empty. [Image credits and standalone captures](docs/images/README.md).
 
-workwork is a **desktop prototype for macOS and Windows** you can run from source or build as a Mac app. It uses a normal Electron window above the game and local agent hooks. It does not modify the game or read coding conversations. The built-in Game guide offers public database lookups and optional model-backed conversations. The turquoise and gold artwork is original; this project is not affiliated with Blizzard, Anthropic, OpenAI, Cursor, or cmux.
+workwork is a **desktop prototype for macOS and Windows** you can run from source or build as a Mac app or portable Windows app. It uses a normal Electron window above the game and local agent hooks. It does not modify the game or read coding conversations. The built-in Game guide offers public database lookups and optional model-backed conversations. The turquoise and gold artwork is original; this project is not affiliated with Blizzard, Anthropic, OpenAI, Cursor, or cmux.
 
 ## Run
 
