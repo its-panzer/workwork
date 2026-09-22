@@ -91,6 +91,7 @@ const cmux = demo || connectionSmoke || process.platform !== 'darwin' ? null : n
 let anchor;
 let gemDrag = null;
 let programmaticBounds = null;
+let settingBounds = false;
 let connectionsRequest = connectionSmoke || process.argv.includes('--connections') ? 1 : 0;
 const shortcut = 'CommandOrControl+Shift+Space';
 const labels = { claude: 'Claude Code', codex: 'Codex', cursor: 'Cursor' };
@@ -167,7 +168,12 @@ function setExpanded(value) {
   win.setIgnoreMouseEvents(false);
   win.setFocusable(true);
   programmaticBounds = bounds();
-  win.setBounds(programmaticBounds);
+  settingBounds = true;
+  try {
+    win.setBounds(programmaticBounds);
+  } finally {
+    settingBounds = false;
+  }
   if (expanded) {
     win.show();
     win.focus();
@@ -230,11 +236,11 @@ function createWindow() {
       win.hide();
     }
   });
-  win.on('moved', () => {
+  win.on('move', () => {
     const b = win.getBounds();
     // Resizing the pane can clamp it away from the saved jewel position.
     // Only user movement replaces that position; closing restores it.
-    if (gemDrag || sameBounds(b, programmaticBounds)) return;
+    if (settingBounds || gemDrag || sameBounds(b, programmaticBounds)) return;
     programmaticBounds = null;
     anchor = { x: b.x + b.width, y: b.y };
     preferences.anchor = anchor;
