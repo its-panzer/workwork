@@ -69,7 +69,17 @@ async function packageWindows(
         },
       );
     } else if (process.platform === 'darwin') {
-      execFileSync('/usr/bin/ditto', ['-c', '-k', '--keepParent', directory, archive]);
+      execFileSync('/usr/bin/ditto', [
+        '-c',
+        '-k',
+        '--norsrc',
+        '--noextattr',
+        '--noqtn',
+        '--noacl',
+        '--keepParent',
+        directory,
+        archive,
+      ]);
     } else {
       fs.rmSync(archive, { force: true });
       execFileSync('zip', ['-q', '-r', archive, path.basename(directory)], {
