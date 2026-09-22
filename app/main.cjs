@@ -35,6 +35,15 @@ const demo = process.argv.includes('--demo') || process.argv.includes('--smoke')
 const smoke = process.argv.includes('--smoke');
 const presentationDemo = demo && !smoke;
 const connectionSmoke = process.argv.includes('--connections-smoke');
+if (smoke || connectionSmoke) {
+  const fail = (error) => {
+    console.error(error);
+    app.exit(1);
+  };
+  process.on('uncaughtException', fail);
+  process.on('unhandledRejection', fail);
+  setTimeout(() => fail(Error('Desktop smoke timed out after 120 seconds.')), 120000).unref();
+}
 const root =
   demo || connectionSmoke ? fs.mkdtempSync(path.join(os.tmpdir(), 'workwork-demo-')) : dataRoot();
 // Source and packaged launches share one live profile and instance lock.
@@ -510,6 +519,7 @@ else {
     registerIPC();
     createWindow();
     createTray();
+    if (smoke || connectionSmoke) console.log(`Starting desktop smoke on ${process.platform}.`);
     shortcutOK =
       smoke ||
       connectionSmoke ||
@@ -554,7 +564,15 @@ else {
     try {
       fs.unlinkSync(path.join(root, 'heartbeat.json'));
     } catch {}
-    if (demo || connectionSmoke) fs.rmSync(root, { recursive: true, force: true });
+    if (demo || connectionSmoke) {
+      // Windows keeps Chromium profile files open until the process exits.
+      // Best-effort temp cleanup must never interrupt quitting the app.
+      try {
+        fs.rmSync(root, { recursive: true, force: true });
+      } catch (error) {
+        console.warn(`Temporary preview profile cleanup: ${error.code}`);
+      }
+    }
   });
   app.on('window-all-closed', () => app.quit());
   app.on('activate', () => {
