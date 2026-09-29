@@ -18,6 +18,8 @@ Optional conversation requests go only to the selected provider's fixed HTTPS AP
 
 Questions, the last three guide exchanges, and selected or retrieved public game entries go to the model provider. Coding task data is not passed to the guide. OpenAI requests set `store: false`; the provider's own data policies still apply. No model tools, shell execution, game control, or filesystem access are exposed. Model answers are untrusted text; citations link to retrieved source entries. Conversation history remains in memory and can be cleared, along with the saved key, from the guide.
 
+The optional Workwork Character addon records only the logged-in character through WoW's addon API. WoW writes its SavedVariables file on reload or logout. Workwork reads that file without executing Lua. The Character view does not add its data to model-provider requests. **Prepare for Gaming bot** copies a dated snapshot into the local workwork profile and places a prompt on the clipboard; the user chooses whether to send that prompt to Grok Bot. The JSON file contains character identity, equipment and stats and should not be attached to public reports. Grok Bot local-computer permissions are managed in Grok Bot.
+
 ## Windows hooks and builds
 
 Native Windows hook commands invoke PowerShell with a generated encoded command. The encoding is transport, not encryption: it contains the Node and hook paths, provider, and event, with no keys. The launcher sets UTF-8, reads stdin, pipes that JSON into Node and preserves its exit code. Hook ownership requires an exact reconstruction of this generated command. Local probes hide console windows; the provider controls how its own hook process is launched.

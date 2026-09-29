@@ -17,6 +17,11 @@ const os = require('node:os');
 const { execFile } = require('node:child_process');
 const { GameGuide, sourceURL } = require('../src/game-guide.cjs');
 const { GuideChat } = require('../src/guide-chat.cjs');
+const {
+  readLatestCharacter,
+  exportForGamingBot,
+  installCharacterAddon,
+} = require('../src/character-snapshot.cjs');
 const { windowsAppPaths } = require('../src/platform.cjs');
 const { StatusStore, PROVIDERS } = require('../src/events.cjs');
 const { demoData } = require('../src/demo.cjs');
@@ -350,6 +355,20 @@ function registerIPC() {
   guideHandler('guide-clear', (removeKey) => {
     if (typeof removeKey !== 'boolean') throw Error('Invalid conversation action.');
     return guideChat.clear(removeKey);
+  });
+  guideHandler('guide-character', () => (demo || connectionSmoke ? null : readLatestCharacter()));
+  guideHandler('guide-install-character-addon', () => {
+    if (demo || connectionSmoke) throw Error('Addon installation is unavailable in demo mode.');
+    return installCharacterAddon(path.join(app.getAppPath(), 'addons', 'WorkworkCharacter'));
+  });
+  guideHandler('guide-export-character', () => {
+    if (demo || connectionSmoke) throw Error('Character export is unavailable in demo mode.');
+    const data = readLatestCharacter();
+    const result = exportForGamingBot(data, path.join(root, 'forever-character-for-gaming.json'));
+    clipboard.writeText(
+      `Gaming, please read my WorkWork character snapshot at ${result.file}. It was saved at ${result.savedAt}. Use it as a dated source for my own equipment and stats; verify game advice against current Forever sources.`,
+    );
+    return { ...result, promptCopied: true };
   });
   ipcMain.on('gem-pointer', (event, gesture) => {
     if (event.sender !== win.webContents || !gesture || typeof gesture !== 'object') return;

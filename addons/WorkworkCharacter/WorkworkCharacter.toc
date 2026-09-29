@@ -1,0 +1,5 @@
+## Interface: 16001
+## Title: Workwork Character
+## Notes: Saves your own Forever character equipment and stats for local WorkWork use.
+## SavedVariablesPerCharacter: WorkworkCharacterSnapshot
+WorkworkCharacter.lua

@@ -55,3 +55,9 @@ Windows builds now include a native executable and icon, notification-area menu,
 The source archive and both app packages share explicit file manifests, excluding local settings, credentials and task data. Windows conversations use Electron secure storage backed by DPAPI. Windows builds are unsigned, run without elevation, and do not change PowerShell execution policy.
 
 Verification is recorded in the Windows, macOS and Linux jobs of the [Checks workflow](https://github.com/its-panzer/workwork/actions/workflows/ci.yml). Native Windows tests cover shell transport, installed hooks and an approval response. Desktop smoke tests use temporary profiles and synthetic requests; they do not establish compatibility with real agent sessions or games. Windows ARM64, WSL integration, code signing and interactive testing inside WoW remain outside this verification.
+
+## Forever character bridge — September 29, 2026
+
+The Game guide now has a Character view backed by a bundled WoW Forever addon. The addon reads the player's own equipment, attributes, armor, health, mana, location, and money through the in-game API. Forever writes a per-character snapshot on `/reload` or logout; WorkWork reads that saved file as bounded data. The Gaming bot handoff creates a private local JSON file and copies a prompt for manual pasting into the named Grok Bot. It does not send data to Grok automatically.
+
+On this Mac, the addon loaded in the Forever beta and a real saved snapshot parsed into nine stat fields and 13 equipped items. The installed WorkWork app displayed the character and created a mode-0600 handoff file. Formatting, 80 unit tests, desktop smoke, packaged runtime launch, bundle signature, and the Apple Silicon build passed. Two Windows-only tests were skipped locally. The Windows build and Gaming bot receiving the handoff have not been verified in this update.

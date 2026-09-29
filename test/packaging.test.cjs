@@ -16,6 +16,7 @@ test('packaged runtime excludes local files and its hooks run using external Nod
   assert.deepEqual(fs.readdirSync(destination).sort(), [
     'LICENSE',
     'NOTICE',
+    'addons',
     'app',
     'hooks',
     'package.json',
@@ -28,6 +29,10 @@ test('packaged runtime excludes local files and its hooks run using external Nod
   );
   assert.equal(fs.existsSync(path.join(destination, 'app/assets/workwork.icns')), true);
   assert.equal(fs.existsSync(path.join(destination, 'app/assets/workwork.ico')), true);
+  assert.equal(
+    fs.existsSync(path.join(destination, 'addons/WorkworkCharacter/WorkworkCharacter.toc')),
+    true,
+  );
   assert.match(fs.readFileSync(path.join(destination, 'LICENSE'), 'utf8'), /MIT License/);
   assert.equal(
     JSON.parse(fs.readFileSync(path.join(destination, 'package.json'))).devDependencies,

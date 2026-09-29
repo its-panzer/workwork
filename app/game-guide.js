@@ -24,24 +24,38 @@ window.createGameGuide = function (api) {
   root.append(
     node('div', 'eyebrow', 'WORKWORK · GAME GUIDE'),
     node('h2', '', 'Know your next move.'),
-    node('p', 'guide-intro', 'Quests, gear, spells and creatures from Wowhead’s Forever database.'),
+    node('p', 'guide-intro', 'Forever game sources and your saved character equipment and stats.'),
   );
   const tabs = node('div', 'guide-tabs');
   tabs.setAttribute('aria-label', 'Guide mode');
   const lookup = node('section', 'guide-lookup');
+  const character = node('section', 'guide-character');
+  character.hidden = true;
   const chat = node('section', 'guide-chat');
   chat.hidden = true;
   const searchTab = button('Lookup', () => mode(false));
+  const characterTab = button('Character', () => showCharacter());
   const chatTab = button('Conversation', () => mode(true));
   function mode(conversation) {
     lookup.hidden = conversation;
+    character.hidden = true;
     chat.hidden = !conversation;
     searchTab.setAttribute('aria-pressed', String(!conversation));
+    characterTab.setAttribute('aria-pressed', 'false');
     chatTab.setAttribute('aria-pressed', String(conversation));
   }
+  function showCharacter() {
+    lookup.hidden = true;
+    character.hidden = false;
+    chat.hidden = true;
+    searchTab.setAttribute('aria-pressed', 'false');
+    characterTab.setAttribute('aria-pressed', 'true');
+    chatTab.setAttribute('aria-pressed', 'false');
+    refreshCharacter();
+  }
   mode(false);
-  tabs.append(searchTab, chatTab);
-  root.append(tabs, lookup, chat);
+  tabs.append(searchTab, characterTab, chatTab);
+  root.append(tabs, lookup, character, chat);
   const status = node('p', 'guide-status');
   status.setAttribute('role', 'status');
   root.insertBefore(status, lookup);
@@ -56,6 +70,134 @@ window.createGameGuide = function (api) {
       })
       .catch(() => message('Could not open the source.'));
   const sourceLink = (label, url) => button(label, () => openSource(url), 'guide-source');
+  const characterDetails = node('div', 'guide-character-details');
+  const characterActions = node('div', 'guide-character-actions');
+  const installCharacter = button('Install Forever addon', async () => {
+    installCharacter.disabled = true;
+    const response = await api.guideInstallCharacterAddon().catch(() => ({
+      ok: false,
+      error: 'Could not install the addon.',
+    }));
+    installCharacter.disabled = false;
+    message(
+      response.ok
+        ? 'Addon installed. Restart Forever, then type /workwork and /reload in game.'
+        : response.error,
+    );
+  });
+  const refreshCharacterButton = button('Refresh snapshot', () => refreshCharacter());
+  const prepareForGaming = button('Prepare for Gaming bot', async () => {
+    prepareForGaming.disabled = true;
+    const response = await api.guideExportCharacter().catch(() => ({
+      ok: false,
+      error: 'Could not prepare the character snapshot.',
+    }));
+    prepareForGaming.disabled = false;
+    message(
+      response.ok
+        ? 'Local snapshot prepared. A message for Gaming is on your clipboard; paste it into that bot.'
+        : response.error,
+    );
+  });
+  prepareForGaming.disabled = true;
+  characterActions.append(installCharacter, refreshCharacterButton, prepareForGaming);
+  character.append(
+    node('h3', '', 'Your Forever character'),
+    node(
+      'p',
+      'guide-note',
+      'The addon reads your own character through WoW’s addon API. The game saves the snapshot on /reload or logout.',
+    ),
+    characterActions,
+    characterDetails,
+  );
+  const slotNames = [
+    '',
+    'Head',
+    'Neck',
+    'Shoulders',
+    'Shirt',
+    'Chest',
+    'Waist',
+    'Legs',
+    'Feet',
+    'Wrist',
+    'Hands',
+    'Ring 1',
+    'Ring 2',
+    'Trinket 1',
+    'Trinket 2',
+    'Back',
+    'Main hand',
+    'Off hand',
+    'Ranged',
+    'Tabard',
+  ];
+  async function refreshCharacter() {
+    characterDetails.replaceChildren(node('p', '', 'Reading the saved character snapshot…'));
+    const response = await api.guideCharacter().catch(() => ({
+      ok: false,
+      error: 'Could not read the character snapshot.',
+    }));
+    characterDetails.replaceChildren();
+    if (!response.ok) {
+      prepareForGaming.disabled = true;
+      characterDetails.append(node('p', '', response.error));
+      return;
+    }
+    const data = response.value;
+    prepareForGaming.disabled = !data;
+    if (!data) {
+      characterDetails.append(
+        node(
+          'p',
+          '',
+          'No snapshot yet. Install the addon, restart Forever, type /workwork and /reload, then refresh here.',
+        ),
+      );
+      return;
+    }
+    characterDetails.append(
+      node(
+        'p',
+        'guide-character-name',
+        `${data.name} · ${data.realm} · Level ${data.level} ${data.class}`,
+      ),
+      node(
+        'p',
+        'guide-note',
+        `Saved ${new Date(data.savedAt).toLocaleString()} · ${data.zone} · ${(data.moneyCopper / 10000).toFixed(2)} gold · Client ${data.clientVersion}. This is a saved snapshot, not live combat data.`,
+      ),
+    );
+    const stats = node('dl', 'guide-character-stats');
+    for (const [label, value] of Object.entries(data.stats)) {
+      const pair = node('div', 'guide-character-stat');
+      pair.append(
+        node('dt', '', label.replace(/([A-Z])/g, ' $1')),
+        node('dd', '', String(value.effective)),
+      );
+      stats.append(pair);
+    }
+    characterDetails.append(stats);
+    const equipment = node('ul', 'guide-character-equipment');
+    for (const item of data.equipment) {
+      const statLine = Object.entries(item.stats)
+        .filter(([key]) => !/^(?:ITEM_MOD_)?RESISTANCE\d+_NAME$/.test(key))
+        .map(
+          ([key, value]) =>
+            `${key.replace(/^ITEM_MOD_|_SHORT$/g, '').replaceAll('_', ' ')} ${Number.isInteger(value) ? value : value.toFixed(2)}`,
+        )
+        .join(' · ');
+      const entry = node('li');
+      entry.append(
+        node('strong', '', `${slotNames[item.slot] || `Slot ${item.slot}`}: `),
+        node('span', '', item.name),
+      );
+      if (statLine) entry.append(node('small', '', statLine));
+      equipment.append(entry);
+    }
+    characterDetails.append(node('h4', '', 'Equipped armor and items'), equipment);
+  }
   const searchForm = node('form', 'guide-search');
   const query = input('Search Forever');
   query.field.placeholder = 'Quest, item, NPC or spell name';
@@ -355,7 +497,7 @@ window.createGameGuide = function (api) {
     node(
       'p',
       'guide-note',
-      'Forever database snapshot, not live character data. Beta values may change. Missing entries and detailed quest routes are available at the source.',
+      'Lookup and Conversation use a Forever database snapshot. Character uses the last saved in-game addon snapshot. Beta values may change.',
     ),
   );
   api

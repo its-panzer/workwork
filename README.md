@@ -39,7 +39,7 @@ The demo uses fictional tasks in an isolated temporary profile. Its buttons do n
 
 Click the jewel to open or close the pane. Drag the jewel or the expanded title area to move it. The badge counts observed requests, not running tasks. **⌘ Shift Space** toggles the pane; the menu bar provides Open, Collapse, Hide, and Quit. First-run tips introduce the jewel and **Connections**.
 
-Use a windowed or borderless game for initial testing. Behavior over the actual WoW Forever client and exclusive fullscreen has not been verified.
+Use a windowed or borderless game for initial testing. The character addon has been exercised in the Forever beta on macOS; overlay behavior in exclusive fullscreen has not been verified.
 
 ## Build the Mac app
 
@@ -159,13 +159,18 @@ MCP forms support strings, booleans, numbers, integers, and primitive enums. Mor
 Open **Game guide** beside the activity filters. It is a built-in companion for WoW Forever, independent of your coding agents and the jewel's pending-task count.
 
 - **Lookup:** search quest, item, NPC, spell or zone names without an account or API key. Select a result for its database summary. Items include stats; quests include text and start/end map points when the source supplies them. **Open full entry** opens the Forever page for more detail.
+- **Character:** install the bundled Workwork Character addon, then restart Forever. In game, type `/workwork` followed by `/reload`. **Refresh snapshot** reads the character's saved equipment, armor, attributes, health, mana, location and money. The game writes this file on reload or logout, so the view is dated rather than live.
 - **Conversation:** open **Conversation setup**, choose OpenAI or Anthropic, and enter a model ID available to your API account and your API key. Save, then ask a question or choose **Ask about this** on a lookup result. Follow-up questions retain the last three exchanges. **New conversation** clears them; **Clear entry** removes the selected topic.
+
+The character addon uses WoW's own addon API and saves only the current character's data in `WTF/Account/.../SavedVariables/WorkworkCharacter.lua`. Workwork reads that file locally. If your Forever install is outside the standard location, set `WORKWORK_WOW_DIR` to the `_classic_beta_` folder before launching Workwork. The addon does not read game memory, control the character, or stream combat data.
+
+**Prepare for Gaming bot** writes a private JSON copy under `~/.workwork/` and copies a message to your clipboard. Paste that message into your Gaming bot in Grok Bot. Grok Bot may ask you to approve local computer access before it can read the file. Workwork does not send a message or the character snapshot to Grok Bot automatically, and this does not connect to the bot's conversation history. [Grok Bot's local computer access](https://docs.x.ai/grok-bot/approvals-security-and-privacy) is separate from Workwork's permissions.
 
 Get a key from [OpenAI's API dashboard](https://platform.openai.com/api-keys) or [Anthropic's Console](https://console.anthropic.com/settings/keys). API billing and model access are separate from a ChatGPT, Claude, Codex or Cursor subscription. No key is included. Setup does not call the model; submitting a question does. An unselected question uses one model call to choose a search phrase and another for the answer. Selecting an entry skips the search-phrase call.
 
 Answers use retrieved sources with numbered links. Queries go to Wowhead; conversation questions, recent guide messages and retrieved game data go to your selected model provider. Coding task data is never included. Keys are encrypted locally with Electron's operating-system secure storage (Keychain on macOS, DPAPI on Windows). **Remove saved key** deletes that configuration. Conversations and the five-minute lookup cache stay in memory and disappear when the app quits.
 
-The source is [Wowhead's Forever database](https://www.wowhead.com/forever), using its public search pages and [documented item XML feed](https://www.wowhead.com/tooltips). Blizzard's [published Classic API namespaces](https://community.developer.battle.net/api/pages/content/documentation/world-of-warcraft-classic/guides/namespaces.json) did not list Forever when checked on September 21, 2026. The guide never substitutes Retail or another Classic database. Search-page parsing can break if Wowhead changes its markup; source links remain available. Beta values, incomplete entries and AI errors are possible. This is not live character telemetry, a DPS simulator, or an in-game automation agent.
+Lookup and Conversation use [Wowhead's Forever database](https://www.wowhead.com/forever), its public search pages and [documented item XML feed](https://www.wowhead.com/tooltips). Blizzard's [published Classic API namespaces](https://community.developer.battle.net/api/pages/content/documentation/world-of-warcraft-classic/guides/namespaces.json) did not list Forever when checked on September 21, 2026. The guide never substitutes Retail or another Classic database. Search-page parsing can break if Wowhead changes its markup; source links remain available. Beta values, incomplete entries and AI errors are possible. The Character view is a separate saved addon snapshot, not a DPS simulator or an in-game automation agent.
 
 ## Local data
 

@@ -5,7 +5,7 @@ const { SOURCE_FILES } = require('./source-archive.cjs');
 // Ship only reviewed runtime files. Never copy the checkout, local state, or tests.
 const APP_FILES = [
   ...SOURCE_FILES.filter(
-    (file) => /^(app|src|hooks)\//.test(file) || file === 'scripts/setup.cjs',
+    (file) => /^(app|src|hooks|addons)\//.test(file) || file === 'scripts/setup.cjs',
   ).filter((file) => !file.endsWith('.md')),
   'LICENSE',
   'NOTICE',

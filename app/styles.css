@@ -1162,6 +1162,63 @@ footer {
   color: #f4dfa6;
   border-color: #ad9459;
 }
+.guide-character h3 {
+  color: #f0dfb3;
+  font-size: 17px;
+  margin: 0 0 8px;
+}
+.guide-character-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 16px 0;
+}
+.guide-character-actions button {
+  font-size: 12px;
+}
+.guide-character-name {
+  color: #eee2bf;
+  font-weight: 600;
+  margin-bottom: 0;
+}
+.guide-character-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: 8px;
+  margin: 18px 0;
+}
+.guide-character-stats dt,
+.guide-character-stats dd {
+  margin: 0;
+}
+.guide-character-stats dt {
+  color: #9eb7b8;
+  font-size: 11px;
+  text-transform: capitalize;
+}
+.guide-character-stats dd {
+  color: #f0dfb3;
+  font-size: 16px;
+}
+.guide-character-stat {
+  border: 1px solid #526c6a66;
+  padding: 8px 10px;
+}
+.guide-character-equipment {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.guide-character-equipment li {
+  border-top: 1px solid #526c6a66;
+  padding: 8px 0;
+  font-size: 12px;
+}
+.guide-character-equipment small {
+  color: #9eb7b8;
+  display: block;
+  margin-top: 4px;
+}
 .guide-search,
 .guide-ask {
   display: flex;
