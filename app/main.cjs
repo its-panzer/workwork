@@ -17,6 +17,8 @@ const os = require('node:os');
 const { execFile } = require('node:child_process');
 const { GameGuide, sourceURL } = require('../src/game-guide.cjs');
 const { GuideChat } = require('../src/guide-chat.cjs');
+const { ChatGPTAuth } = require('../src/chatgpt-auth.cjs');
+const { ChatGPTProvider } = require('../src/chatgpt-provider.cjs');
 const {
   readLatestCharacter,
   exportForGamingBot,
@@ -59,10 +61,16 @@ app.setPath('userData', path.join(app.getPath('appData'), 'workwork'));
 // never hand off to the live overlay or expose real requests as sample tasks.
 if (demo || connectionSmoke) app.setPath('userData', path.join(root, 'electron'));
 const gameGuide = new GameGuide();
+const chatgptAuth = new ChatGPTAuth({
+  file: path.join(root, 'chatgpt.json'),
+  encryption: safeStorage,
+  openExternal: (url) => shell.openExternal(url),
+});
 const guideChat = new GuideChat({
   file: path.join(root, 'game-guide.json'),
   encryption: safeStorage,
-  guide: gameGuide,
+  chatgpt: new ChatGPTProvider({ auth: chatgptAuth }),
+  character: () => (demo || connectionSmoke ? null : readLatestCharacter()),
 });
 const stateFile = path.join(root, 'state.json');
 const prefsFile = path.join(root, 'preferences.json');
@@ -343,15 +351,66 @@ function registerIPC() {
       try {
         return { ok: true, value: await action(...args) };
       } catch (error) {
-        return { ok: false, error: error.message || 'The guide is unavailable.' };
+        return {
+          ok: false,
+          error: error.message || 'The guide is unavailable.',
+          code: ['usage_limit', 'reconnect'].includes(error.code) ? error.code : undefined,
+        };
       }
     });
   guideHandler('guide-search', (query) => gameGuide.search(query));
   guideHandler('guide-detail', (type, id) => gameGuide.detail(type, id));
   guideHandler('guide-open', (url) => shell.openExternal(sourceURL(url)));
   guideHandler('guide-status', () => guideChat.status());
+  const requireIdleGuide = () => {
+    if (guideChat.busy) throw Error('Wait for the current answer before changing accounts.');
+  };
+  guideHandler('guide-chatgpt-sign-in', async (options) => {
+    requireIdleGuide();
+    if (demo || connectionSmoke) throw Error('ChatGPT sign-in is unavailable in demo mode.');
+    if (options !== undefined && !['add', 'enable', 'retry'].includes(options))
+      throw Error('Invalid sign-in action.');
+    await chatgptAuth.signIn({
+      addAccount: options === 'add',
+      enablePlan: options === 'enable',
+      retryRegistration: options === 'retry',
+    });
+    return guideChat.useChatGPT();
+  });
+  guideHandler('guide-chatgpt-cancel', () => {
+    chatgptAuth.cancelSignIn();
+    return guideChat.status();
+  });
+  guideHandler('guide-chatgpt-sign-out', async () => {
+    requireIdleGuide();
+    guideChat.clear();
+    await chatgptAuth.signOut();
+    return guideChat.status();
+  });
+  guideHandler('guide-chatgpt-account', (id) => {
+    requireIdleGuide();
+    if (typeof id !== 'string') throw Error('Choose a ChatGPT account.');
+    chatgptAuth.selectAccount(id);
+    return guideChat.useChatGPT();
+  });
+  guideHandler('guide-chatgpt-acknowledge', () => {
+    chatgptAuth.acknowledgePlanUsage();
+    return guideChat.status();
+  });
+  guideHandler('guide-billing', (provider) => {
+    requireIdleGuide();
+    if (provider === 'chatgpt') return guideChat.useChatGPT();
+    if (provider === 'api') return guideChat.useAPI();
+    throw Error('Choose ChatGPT or your saved API setup.');
+  });
+  guideHandler('guide-chatgpt-usage', () =>
+    shell.openExternal('https://chatgpt.com/settings/usage'),
+  );
   guideHandler('guide-configure', (config) => guideChat.save(config));
-  guideHandler('guide-ask', (question, context) => guideChat.ask(question, context));
+  guideHandler('guide-ask', (question, context, includeCharacter) => {
+    if (chatgptAuth.status().signingIn) throw Error('Finish or cancel ChatGPT sign-in first.');
+    return guideChat.ask(question, context, includeCharacter);
+  });
   guideHandler('guide-clear', (removeKey) => {
     if (typeof removeKey !== 'boolean') throw Error('Invalid conversation action.');
     return guideChat.clear(removeKey);
@@ -582,6 +641,7 @@ else {
     }
   });
   app.on('before-quit', () => {
+    chatgptAuth.cancelSignIn();
     quitting = true;
     clearInterval(interval);
     globalShortcut.unregisterAll();

@@ -3,6 +3,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
+const { canSymlink } = require('./symlink-support.cjs');
 const {
   parseSnapshot,
   readLatestCharacter,
@@ -11,14 +12,16 @@ const {
 } = require('../src/character-snapshot.cjs');
 
 const sample =
-  'WorkworkCharacterSnapshot = "WW1;character|Fixture|Test%20Realm|20|WARLOCK|Human|Affliction|Westfall|12345|1790712000|1.60.1;stat|armor|340|300;stat|intellect|45|40;equipment|1|123|Blue%20Hat|%7Ccffa%7CHitem%3A123%7Ch%5BBlue%20Hat%5D%7Ch%7Cr|ITEM_MOD_INTELLECT_SHORT=5"\n';
+  'WorkworkCharacterSnapshot = "WW1;character|Fixture|Test%20Realm|20|WARLOCK|Human|Affliction|Westfall|12345|1790712000|1.60.1;stat|armor|340|300;stat|intellect|45;equipment|1|123|Blue%20Hat|%7Ccffa%7CHitem%3A123%7Ch%5BBlue%20Hat%5D%7Ch%7Cr|ITEM_MOD_INTELLECT_SHORT%3D5%2CITEM_MOD_SPIRIT_SHORT%3D-2"\n';
 
 test('parses addon SavedVariables as bounded data, never as executable Lua', () => {
   const data = parseSnapshot(sample);
   assert.equal(data.name, 'Fixture');
   assert.equal(data.stats.armor.effective, 340);
+  assert.equal(data.stats.intellect.base, null);
   assert.equal(data.equipment[0].name, 'Blue Hat');
   assert.equal(data.equipment[0].stats.ITEM_MOD_INTELLECT_SHORT, 5);
+  assert.equal(data.equipment[0].stats.ITEM_MOD_SPIRIT_SHORT, -2);
   assert.throws(
     () => parseSnapshot('WorkworkCharacterSnapshot = os.execute("bad")'),
     /No Workwork/,
@@ -27,15 +30,6 @@ test('parses addon SavedVariables as bounded data, never as executable Lua', () 
     () => parseSnapshot(sample.replace('|20|WARLOCK|', '|oops|WARLOCK|')),
     /invalid number/,
   );
-});
-
-test('accepts the optional stat base and encoded item modifiers written by the addon', () => {
-  const saved = sample
-    .replace('stat|intellect|45|40', 'stat|intellect|45')
-    .replace('ITEM_MOD_INTELLECT_SHORT=5', 'ITEM_MOD_INTELLECT_SHORT%3D5');
-  const data = parseSnapshot(saved);
-  assert.equal(data.stats.intellect.base, null);
-  assert.equal(data.equipment[0].stats.ITEM_MOD_INTELLECT_SHORT, 5);
 });
 
 test('discovers the latest per-character file and exports only on request', (t) => {
@@ -67,4 +61,22 @@ test('addon installation refuses to overwrite differing files', (t) => {
   installCharacterAddon(source, [game]);
   fs.writeFileSync(path.join(source, 'WorkworkCharacter.lua'), 'different');
   assert.throws(() => installCharacterAddon(source, [game]), /differs/);
+});
+
+test('addon installation refuses a symlinked destination directory', (t) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'workwork-addon-test-'));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  if (!canSymlink(t, root)) return;
+  const source = path.join(root, 'source');
+  const game = path.join(root, 'game');
+  const outside = path.join(root, 'outside');
+  const addons = path.join(game, 'Interface', 'AddOns');
+  fs.mkdirSync(source);
+  fs.mkdirSync(outside);
+  fs.mkdirSync(addons, { recursive: true });
+  for (const name of ['WorkworkCharacter.toc', 'WorkworkCharacter.lua'])
+    fs.writeFileSync(path.join(source, name), name);
+  fs.symlinkSync(outside, path.join(addons, 'WorkworkCharacter'), 'dir');
+  assert.throws(() => installCharacterAddon(source, [game]), /symbolic link/);
+  assert.deepEqual(fs.readdirSync(outside), []);
 });

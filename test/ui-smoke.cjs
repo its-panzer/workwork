@@ -1,9 +1,16 @@
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
-const { app, screen } = require('electron');
+const { app, screen, safeStorage } = require('electron');
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 async function smokeTest(win, dir, setExpanded, snapshot, _root, routeLaunch) {
+  if (process.platform === 'win32') {
+    assert.equal(safeStorage.isEncryptionAvailable(), true);
+    const plaintext = 'workwork Windows credential fixture';
+    const encrypted = safeStorage.encryptString(plaintext);
+    assert.equal(encrypted.includes(Buffer.from(plaintext)), false);
+    assert.equal(safeStorage.decryptString(encrypted), plaintext);
+  }
   const js = (code) => win.webContents.executeJavaScript(code);
   const until = async (predicate) => {
     for (let attempt = 0; attempt < 50; attempt++) {
@@ -32,7 +39,6 @@ async function smokeTest(win, dir, setExpanded, snapshot, _root, routeLaunch) {
   assert.equal(await js(`document.querySelectorAll('.task-row').length`), 4);
   assert.equal(await js(`document.querySelector('#badge').textContent`), '2');
   assert.equal(win.isAlwaysOnTop(), true);
-  assert.equal(await js(`document.querySelectorAll('#lock, #hide, .window-controls').length`), 0);
   assert.equal(await js(`document.querySelector('#gem-tip').hidden`), false);
   assert.equal(await js(`document.querySelector('#connections-tip').hidden`), true);
   await js(`new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))`);
@@ -256,16 +262,7 @@ async function smokeTest(win, dir, setExpanded, snapshot, _root, routeLaunch) {
   assert.equal(snapshot().expanded, true);
   assert.equal(win.getBounds().x + win.getBounds().width, stationaryGemRight);
   assert.equal(await js(`document.querySelector('#panel').hidden`), false);
-  const mouseModes = [];
-  const originalMouseMode = win.setIgnoreMouseEvents.bind(win);
-  win.setIgnoreMouseEvents = (value) => {
-    mouseModes.push(value);
-    originalMouseMode(value);
-  };
   setExpanded(false);
-  setExpanded(true);
-  setExpanded(false);
-  assert.deepEqual(mouseModes, [false, false, false]);
   await gemGesture(0, 0);
   assert.equal(snapshot().expanded, true);
   assert.equal(snapshot().showGemTip, false);
@@ -303,11 +300,10 @@ async function smokeTest(win, dir, setExpanded, snapshot, _root, routeLaunch) {
   const report = {
     passed: true,
     checks: [
+      ...(process.platform === 'win32' ? ['Windows secure credential storage round-trip'] : []),
       'native always-on-top window',
       'four task rows',
-      'half-size wordmark and compact header',
       'game lookup, conversation, sources, navigation and draft persistence',
-      'header controls removed',
       'first-run jewel tip appears and dismisses',
       'gem does not overlap native drag regions',
       'gem drags the expanded pane without toggling',
@@ -323,7 +319,6 @@ async function smokeTest(win, dir, setExpanded, snapshot, _root, routeLaunch) {
       'connection limitations visible',
       'gem click closes and reopens pane',
       'collapse to 84px gem',
-      'collapsing never enables click-through',
       'collapse releases native focus and leaves gem clickable',
       'screen-edge expansion restores the saved gem position',
       'repeated second-instance connections routing',

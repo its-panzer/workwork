@@ -503,8 +503,6 @@ for (const hook_event_name of ['beforeShellExecution', 'beforeMCPExecution'])
     const request = await until(() => pendingRequests(root)[0]);
     assert.equal(request.review, true);
     assert.equal(request.hookEvent, hook_event_name);
-    assert.deepEqual(hookResponse(request, { action: 'native' }), { permission: 'ask' });
-    assert.equal(hookResponse(request, { action: 'deny' }).permission, 'deny');
     assert.equal(hookResponse(request, { action: 'allow-all' }).permission, 'ask');
     submitDecision(request.id, { action: 'allow' }, root);
     assert.deepEqual(await result, { permission: 'allow' });

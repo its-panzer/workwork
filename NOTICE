@@ -9,6 +9,14 @@ app/assets/README.md.
 Electron and other dependencies remain subject to their own licenses.
 The Mac build retains Electron's LICENSE and LICENSES.chromium.html under
 Contents/Resources/app/licenses inside the app bundle.
+jose 6.2.12 is Copyright (c) 2018 Filip Skokan, distributed under the MIT
+License. Its license is bundled at node_modules/jose/LICENSE.md in the app's
+runtime directory.
+
+app/assets/chatgpt-logo-white.svg is OpenAI's official ChatGPT sign-in asset,
+obtained from https://developers.openai.com/assets/siwc/chatgpt-logo-white.svg.
+It remains subject to OpenAI's branding and trademark rights and is not part
+of this project's original MIT-licensed artwork.
 
 workwork is an independent project, not affiliated with or endorsed by
 Blizzard Entertainment, Anthropic, OpenAI, Cursor, or cmux. Their names and

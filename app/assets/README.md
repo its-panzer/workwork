@@ -4,6 +4,8 @@ The design uses turquoise stone, sculpted gold, and compass shapes inspired by f
 
 Original artwork is distributed under the repository's MIT license. Generated image provenance is documented below; non-rendering image metadata is removed from the public assets.
 
+`chatgpt-logo-white.svg` is OpenAI's official [Sign in with ChatGPT button asset](https://developers.openai.com/assets/siwc/chatgpt-logo-white.svg), used for the account sign-in control. It retains OpenAI's branding and trademark rights and is not part of WorkWork's original MIT-licensed artwork.
+
 - `workwork-medallion.png`: original transparent medallion, generated with the built-in imagegen tool. 1254 × 1254 RGBA; 860,290 fully transparent pixels. The generated alpha is preserved.
 - `compass-field.svg`: original code-drawn engraved compass backdrop for the masthead.
 - `frame-corner.svg`: original code-drawn beveled gold corner fitting.

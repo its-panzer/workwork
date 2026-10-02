@@ -3,7 +3,7 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const { execFileSync } = require('node:child_process');
-const { APP_FILES, stageApplication } = require('./stage-application.cjs');
+const { stageApplication } = require('./stage-application.cjs');
 const { buildIcon } = require('./build-icon.cjs');
 
 async function packageMac(root = path.resolve(__dirname, '..'), arch = process.arch) {
@@ -94,4 +94,4 @@ if (require.main === module) {
     });
   }
 }
-module.exports = { APP_FILES, stageApplication, packageMac };
+module.exports = { packageMac };

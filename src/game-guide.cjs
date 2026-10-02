@@ -63,10 +63,10 @@ function parseSearch(html) {
   for (const match of html.matchAll(/new Listview\(\{([\s\S]*?)\}\);/g)) {
     const type = match[1].match(/template:\s*["']([^"']+)["']/)?.[1];
     const id = match[1].match(/WH\.getPageData\(["']([^"']+)["']\)/)?.[1];
-    if (!TYPES.includes(type) || !data.has(id)) continue;
-    recognized = true;
     const rows = data.get(id);
-    if (!Array.isArray(rows)) continue;
+    if (!type || !Array.isArray(rows)) continue;
+    recognized = true;
+    if (!TYPES.includes(type)) continue;
     for (const row of rows) {
       if (!row || !Number.isSafeInteger(row.id) || row.id < 1 || typeof row.name !== 'string')
         continue;
@@ -91,7 +91,7 @@ function parseSearch(html) {
       });
     }
   }
-  if (!recognized && !/No results|No matches|0 results/i.test(html))
+  if (!recognized && !/No results|No (?:Exact )?matches|0 results/i.test(html))
     throw Error('Wowhead’s results could not be read. Open the source or try again later.');
   return [...entries.values()]
     .sort((a, b) => b.rank - a.rank)

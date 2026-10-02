@@ -42,7 +42,11 @@ local function capture()
   if armorEffective then record(parts, "stat", "armor", armorEffective, armorBase) end
   record(parts, "stat", "health", (call(UnitHealthMax, "player")))
   record(parts, "stat", "mana", (call(UnitPowerMax, "player", 0)))
-  record(parts, "stat", "attackPower", (call(UnitAttackPower, "player")))
+  local attackBase, attackPositive, attackNegative = call(UnitAttackPower, "player")
+  if attackBase then
+    record(parts, "stat", "attackPower",
+      math.max(0, attackBase + (attackPositive or 0) + (attackNegative or 0)), attackBase)
+  end
 
   for slot = 1, 19 do
     local link = call(GetInventoryItemLink, "player", slot)

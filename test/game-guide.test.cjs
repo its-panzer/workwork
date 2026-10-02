@@ -1,8 +1,11 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { GameGuide, parseSearch, parseDetail, sourceURL, plain } = require('../src/game-guide.cjs');
-const searchPage = (rows = [{ id: 42, name: 'A &amp; B', level: 7, reqlevel: 4 }]) =>
-  `<script type="application/json" id="data.sample">${JSON.stringify(rows)}</script><script>new Listview({template: "quest", data: WH.getPageData("sample"),});</script>`;
+const searchPage = (
+  rows = [{ id: 42, name: 'A &amp; B', level: 7, reqlevel: 4 }],
+  template = 'quest',
+) =>
+  `<script type="application/json" id="data.sample">${JSON.stringify(rows)}</script><script>new Listview({template: "${template}", data: WH.getPageData("sample"),});</script>`;
 test('search reads JSON without executing scripts and constructs Forever links', () => {
   const [entry] = parseSearch(searchPage() + '<script>throw Error("never execute");</script>');
   assert.equal(entry.name, 'A & B');
@@ -11,6 +14,21 @@ test('search reads JSON without executing scripts and constructs Forever links',
   assert.deepEqual(parseSearch(searchPage([{ id: '../x', name: 'bad' }, null])), []);
   assert.throws(() => parseSearch('<html>Blocked</html>'), /could not be read/);
   assert.deepEqual(parseSearch(searchPage([])), []);
+});
+test('valid guide-only results and No Exact Matches are empty database lookups', () => {
+  assert.deepEqual(parseSearch(searchPage([{ id: 123, name: 'Arms Warrior Guide' }], 'guide')), []);
+  assert.deepEqual(parseSearch(searchPage([], 'forums-post-preview')), []);
+  assert.deepEqual(parseSearch('<h1>No Exact Matches for <i>uncommon weapons</i></h1>'), []);
+  for (const template of ['quest', 'guide']) {
+    assert.throws(
+      () => parseSearch(searchPage({ error: 'Malformed results' }, template)),
+      /could not be read/,
+    );
+    assert.throws(
+      () => parseSearch(searchPage([], template).replace('[]</script>', 'invalid JSON</script>')),
+      /could not be read/,
+    );
+  }
 });
 test('remote markup becomes text; invalid and missing detail fails explicitly', () => {
   assert.equal(plain('<script>alert(1)</script><b>A &amp; B</b><br>Hi &#x1f600;'), 'A & B\nHi 😀');

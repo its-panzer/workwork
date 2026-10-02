@@ -154,18 +154,15 @@ class StatusStore {
     for (const [key, row] of this.rows) if (now - row.time > RETAIN_MS) this.rows.delete(key);
     return [...this.rows.entries()]
       .filter(([, r]) => !r.dismissed)
-      .map(([key, r]) => ({
-        ...r,
-        key,
-        status:
-          ['running', 'attention'].includes(r.status) && now - r.time > STALE_MS
-            ? 'unknown'
-            : r.status,
-        detail:
-          ['running', 'attention'].includes(r.status) && now - r.time > STALE_MS
-            ? 'No recent signal; check the app'
-            : r.detail,
-      }))
+      .map(([key, row]) => {
+        const stale = ['running', 'attention'].includes(row.status) && now - row.time > STALE_MS;
+        return {
+          ...row,
+          key,
+          status: stale ? 'unknown' : row.status,
+          detail: stale ? 'No recent signal; check the app' : row.detail,
+        };
+      })
       .sort(compareTasks)
       .slice(0, 40);
   }

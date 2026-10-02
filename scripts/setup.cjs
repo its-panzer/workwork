@@ -98,7 +98,8 @@ function hookPlan(home = os.homedir(), node = process.execPath, { cursorReview =
     ),
   }));
 }
-const OWN_COMMAND_SUFFIXES = hookPlan('', '', { cursorReview: true }).flatMap((plan) =>
+const OWN_HOOK_PLANS = hookPlan('', '', { cursorReview: true });
+const OWN_COMMAND_SUFFIXES = OWN_HOOK_PLANS.flatMap((plan) =>
   Object.values(plan.additions).flatMap((groups) =>
     groups
       .flatMap((group) => group.hooks || [group])
@@ -108,8 +109,8 @@ const OWN_COMMAND_SUFFIXES = hookPlan('', '', { cursorReview: true }).flatMap((p
 function isOurs(command) {
   if (typeof command !== 'string') return false;
   if (process.platform === 'win32') {
-    return hookPlan('', '', { cursorReview: true }).some((plan) =>
-      Object.entries(plan.additions).some(([event, groups]) => {
+    return OWN_HOOK_PLANS.some((plan) =>
+      Object.keys(plan.additions).some((event) => {
         const request = [
           'PermissionRequest',
           'Elicitation',
@@ -130,10 +131,7 @@ function isOurs(command) {
   return OWN_COMMAND_SUFFIXES.some((suffix) => {
     if (!command.endsWith(suffix)) return false;
     const quotedNode = command.slice(0, -suffix.length);
-    const node =
-      process.platform === 'win32'
-        ? quotedNode.slice(1, -1)
-        : quotedNode.slice(1, -1).replace(/'\\''/g, "'");
+    const node = quotedNode.slice(1, -1).replace(/'\\''/g, "'");
     return path.isAbsolute(node) && quote(node) === quotedNode;
   });
 }

@@ -1145,14 +1145,14 @@ footer {
   margin-bottom: 5px;
 }
 .game-guide .guide-intro {
-  margin: 0 0 18px;
+  margin: 0 0 12px;
   color: #aabdbc;
   font-size: 13px;
 }
 .guide-tabs {
   display: flex;
   gap: 6px;
-  margin-bottom: 18px;
+  margin-bottom: 12px;
 }
 .guide-tabs button {
   padding: 7px 14px;
@@ -1339,6 +1339,23 @@ footer {
   font-size: 12px;
   color: #e1c68a;
 }
+.guide-character-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  color: #c8d6d3;
+  font-size: 12px;
+}
+.guide-character-option input {
+  accent-color: #dbc48d;
+}
+.game-guide .guide-character-note {
+  margin: 5px 0 0 24px;
+  color: #91a5a5;
+  font-size: 11px;
+  line-height: 1.5;
+}
 .guide-status:empty {
   display: none;
 }
@@ -1380,11 +1397,10 @@ footer {
 }
 .guide-citations {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 0 14px;
   align-items: start;
-}
-.guide-ask {
-  margin-top: 18px;
 }
 @media (max-width: 610px) {
   .filters {
@@ -1402,13 +1418,218 @@ footer {
   gap: 18px;
   margin-bottom: 10px;
 }
-.guide-transcript {
+
+/* Chat is the guide's main view; account controls stay compact beside it. */
+.guide-connection {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 16px;
+  padding: 12px 0;
+  border-block: 1px solid #526c6a66;
+}
+.guide-connection > div {
+  flex: 1 1 230px;
+}
+.guide-connection strong {
+  color: var(--paper);
+  font-size: 13px;
+}
+.guide-connection p {
+  margin: 4px 0 0;
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+.chatgpt-sign-in {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 40px;
+  padding: 9px 14px;
+  border: 1px solid #747c79;
+  border-radius: 5px;
+  background: #161817;
+  color: #f9f9f7;
+  font-weight: 600;
+}
+.chatgpt-sign-in img {
+  width: 20px;
+  height: 20px;
+}
+.chatgpt-sign-in:hover {
+  background: #2b302d;
+}
+.guide-chat-empty {
+  padding: 12px 0 4px;
+}
+.guide-chat-empty > p {
+  color: var(--paper);
+  margin: 0 0 8px;
+  font-size: 13px;
+}
+.guide-starters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+}
+.guide-starter {
+  border: 0;
+  border-bottom: 1px solid #536e6b;
+  background: transparent;
+  padding: 6px 0;
+  font-size: 12px;
+  color: var(--aqua);
+  text-align: left;
+}
+.guide-starter:hover {
+  color: var(--gold);
+  border-color: var(--gold);
+}
+.guide-field textarea {
+  width: 100%;
+  resize: vertical;
+  min-height: 72px;
   max-height: 180px;
-  overflow-y: auto;
+  background: #071a20;
+  color: var(--paper);
+  border: 1px solid #4d6c71;
+  border-radius: 4px;
+  padding: 10px 12px;
+  font: inherit;
+  font-size: 13px;
+  line-height: 1.5;
+  user-select: text;
+}
+.guide-field textarea::placeholder {
+  color: #98acaa;
+}
+.guide-composer-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
 }
 .guide-ask {
   position: sticky;
   bottom: 0;
   background: #0c222a;
-  padding: 10px 0;
+  margin-top: 8px;
+  padding: 8px 0;
+  z-index: 1;
+}
+.guide-ask .primary {
+  align-self: stretch;
+  min-width: 76px;
+}
+.guide-transcript {
+  max-height: clamp(150px, 34vh, 340px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+.guide-transcript:empty {
+  display: none;
+}
+.guide-turn {
+  padding: 16px 10px 16px 0;
+}
+.guide-turn:first-child {
+  border-top: 0;
+}
+.guide-turn .guide-question {
+  font-size: 14px;
+  line-height: 1.5;
+  font-weight: 500;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  user-select: text;
+}
+.guide-speaker {
+  display: block;
+  margin-top: 18px;
+  color: var(--aqua);
+}
+.guide-citations .guide-source {
+  font-size: 11px;
+  padding: 4px 0;
+}
+.guide-answer-pending {
+  color: var(--muted);
+}
+.guide-answer-error {
+  color: var(--red);
+}
+.guide-usage,
+.guide-chat-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 5px 12px;
+  color: var(--muted);
+  font-size: 11px;
+}
+.guide-usage .text-button,
+.guide-chat-footer .text-button {
+  padding: 3px 0;
+  font-size: 11px;
+}
+.guide-chat-footer {
+  margin: 4px 0 12px;
+}
+.guide-accounts {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 10px;
+  margin: 14px 0;
+}
+.guide-accounts label {
+  flex-basis: 240px;
+}
+.guide-api-setup {
+  padding-top: 12px;
+}
+.guide-api-setup summary {
+  font-size: 12px;
+}
+.guide-setup .guide-connection {
+  border-top: 0;
+}
+.game-guide .guide-chat-privacy {
+  margin-top: 10px;
+}
+.guide-plan-dialog {
+  width: min(440px, calc(100vw - 48px));
+  padding: 24px;
+  border: 1px solid var(--gold);
+  border-radius: 6px;
+  background: var(--ink);
+  color: var(--paper);
+  box-shadow: 0 16px 60px #0009;
+}
+.guide-plan-dialog::backdrop {
+  background: #031015b8;
+}
+.guide-plan-dialog h3 {
+  font-size: 18px;
+  color: var(--gold);
+  margin: 0 0 12px;
+}
+.guide-plan-dialog p {
+  font-size: 13px;
+  line-height: 1.6;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .guide-answer-pending {
+    animation: guide-thinking 1.6s ease-in-out infinite alternate;
+  }
+  @keyframes guide-thinking {
+    to {
+      opacity: 0.55;
+    }
+  }
 }

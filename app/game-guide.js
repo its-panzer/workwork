@@ -23,38 +23,27 @@ window.createGameGuide = function (api) {
   const root = node('div', 'game-guide');
   root.append(
     node('div', 'eyebrow', 'WORKWORK · GAME GUIDE'),
-    node('h2', '', 'Know your next move.'),
-    node('p', 'guide-intro', 'Forever game sources and your saved character equipment and stats.'),
+    node('h2', '', 'What’s your next quest?'),
+    node('p', 'guide-intro', 'Quest help, farming spots, and gear advice for WoW Forever.'),
   );
   const tabs = node('div', 'guide-tabs');
   tabs.setAttribute('aria-label', 'Guide mode');
   const lookup = node('section', 'guide-lookup');
   const character = node('section', 'guide-character');
-  character.hidden = true;
   const chat = node('section', 'guide-chat');
-  chat.hidden = true;
-  const searchTab = button('Lookup', () => mode(false));
-  const characterTab = button('Character', () => showCharacter());
-  const chatTab = button('Conversation', () => mode(true));
-  function mode(conversation) {
-    lookup.hidden = conversation;
-    character.hidden = true;
-    chat.hidden = !conversation;
-    searchTab.setAttribute('aria-pressed', String(!conversation));
-    characterTab.setAttribute('aria-pressed', 'false');
-    chatTab.setAttribute('aria-pressed', String(conversation));
+  const views = [chat, lookup, character];
+  const modeButtons = ['Chat', 'Lookup', 'Character'].map((label, index) =>
+    button(label, () => showView(views[index])),
+  );
+  function showView(view) {
+    views.forEach((section, index) => {
+      section.hidden = section !== view;
+      modeButtons[index].setAttribute('aria-pressed', String(section === view));
+    });
+    if (view === character) refreshCharacter();
   }
-  function showCharacter() {
-    lookup.hidden = true;
-    character.hidden = false;
-    chat.hidden = true;
-    searchTab.setAttribute('aria-pressed', 'false');
-    characterTab.setAttribute('aria-pressed', 'true');
-    chatTab.setAttribute('aria-pressed', 'false');
-    refreshCharacter();
-  }
-  mode(false);
-  tabs.append(searchTab, characterTab, chatTab);
+  showView(chat);
+  tabs.append(...modeButtons);
   root.append(tabs, lookup, character, chat);
   const status = node('p', 'guide-status');
   status.setAttribute('role', 'status');
@@ -241,14 +230,16 @@ window.createGameGuide = function (api) {
       );
       return;
     }
-    selected = response.value;
+    const detail = response.value;
+    selected = detail;
     selectedView.append(
       node('div', 'eyebrow', `${entry.type.toUpperCase()} · FOREVER`),
       node('h3', '', selected.name),
       node('p', 'guide-entry-text', selected.text),
       sourceLink('Open full entry on Wowhead ↗', selected.url),
       button('Ask about this', () => {
-        mode(true);
+        selected = detail;
+        showView(chat);
         updateContext();
         question.field.focus();
       }),
@@ -299,19 +290,70 @@ window.createGameGuide = function (api) {
     }
     results.append(sourceLink('All results on Wowhead ↗', result.url));
   });
-  const setup = node('details', 'guide-setup');
-  setup.append(node('summary', '', 'Conversation setup'));
+  let configured = false,
+    answering = false,
+    settingsBusy = false,
+    signingIn = false;
+  let configuration = {};
+  const connection = node('div', 'guide-connection');
+  const connectionCopy = node('div');
+  const connectionTitle = node('strong', '', 'Use your ChatGPT plan');
+  const connectionNote = node(
+    'p',
+    '',
+    'Connect an eligible Plus or Pro account to start chatting.',
+  );
+  connectionCopy.append(connectionTitle, connectionNote);
+  const signIn = button('Continue with ChatGPT', () => connect(), 'chatgpt-sign-in');
+  const logo = node('img');
+  logo.src = 'assets/chatgpt-logo-white.svg';
+  logo.alt = '';
+  signIn.prepend(logo);
+  const cancelSignIn = button(
+    'Cancel sign-in',
+    () => runAction(() => api.guideChatGPTCancel()),
+    'text-button',
+  );
+  cancelSignIn.hidden = true;
+  const retrySignIn = button('Retry sign-in', () => connect('retry'), 'text-button');
+  retrySignIn.hidden = true;
+  connection.append(connectionCopy, signIn, cancelSignIn, retrySignIn);
+
+  const options = node('details', 'guide-setup');
+  options.append(node('summary', '', 'Account & API options'));
+  const accounts = node('div', 'guide-accounts');
+  const accountLabel = node('label', 'guide-field');
+  accountLabel.append(node('span', '', 'ChatGPT account'));
+  const account = node('select');
+  accountLabel.append(account);
+  account.addEventListener('change', () =>
+    runAction(() => api.guideChatGPTAccount(account.value), true),
+  );
+  const addAccount = button('Add account', () => connect('add'), 'text-button');
+  const signOut = button(
+    'Sign out',
+    () => runAction(() => api.guideChatGPTSignOut(), true),
+    'text-button',
+  );
+  const usePlan = button('Use ChatGPT plan', () =>
+    runAction(() => api.guideBilling('chatgpt'), true),
+  );
+  accounts.append(accountLabel, addAccount, signOut, usePlan);
+  options.append(accounts);
+
+  const setup = node('details', 'guide-api-setup');
+  setup.append(node('summary', '', 'Use an API key instead'));
   setup.append(
     node(
       'p',
       '',
-      'Use your own API key. Questions, recent guide messages and retrieved game data go to your chosen provider. API usage may be billed separately. Your coding tasks are never included.',
+      'OpenAI and Anthropic API usage is billed separately from your chat subscription.',
     ),
   );
   const keyLinks = node('div', 'guide-key-links');
   keyLinks.append(
-    sourceLink('Get an OpenAI API key ↗', 'https://platform.openai.com/api-keys'),
-    sourceLink('Get an Anthropic API key ↗', 'https://console.anthropic.com/settings/keys'),
+    sourceLink('OpenAI API keys ↗', 'https://platform.openai.com/api-keys'),
+    sourceLink('Anthropic API keys ↗', 'https://console.anthropic.com/settings/keys'),
   );
   setup.append(keyLinks);
   const setupForm = node('form', 'guide-setup-form');
@@ -334,46 +376,58 @@ window.createGameGuide = function (api) {
   key.field.required = true;
   key.field.autocomplete = 'off';
   key.field.spellcheck = false;
-  const save = node('button', 'primary', 'Save setup');
+  const save = node('button', 'primary', 'Save API setup');
   save.type = 'submit';
+  const useAPI = button('Use saved API setup', () =>
+    runAction(() => api.guideBilling('api'), true),
+  );
   const remove = button(
     'Remove saved key',
-    async () => {
-      const response = await api.guideClear(true);
-      if (!response.ok) {
-        message(response.error);
-        return;
-      }
-      transcript.replaceChildren();
-      configured = false;
-      setup.open = true;
-      updateConfiguration(response.value);
-      message('Saved key removed.');
-    },
+    () => runAction(() => api.guideClear(true), true),
     'text-button',
   );
-  setupForm.append(providerLabel, model.wrap, key.wrap, save, remove);
-  setup.append(
-    setupForm,
+  setupForm.append(providerLabel, model.wrap, key.wrap, save, useAPI, remove);
+  setup.append(setupForm);
+  options.append(
+    setup,
     node(
       'p',
       'guide-note',
-      'The key is encrypted locally using your operating system’s secure storage. Guide conversations stay in memory and clear when workwork quits.',
+      'Credentials are encrypted on this computer. Switching accounts starts a new conversation.',
     ),
   );
+
+  const planDialog = node('dialog', 'guide-plan-dialog');
+  planDialog.setAttribute('aria-labelledby', 'guide-plan-title');
+  const planTitle = node('h3', '', 'You’re using your ChatGPT plan');
+  planTitle.id = 'guide-plan-title';
+  const acknowledge = button(
+    'Got it',
+    async () => {
+      if (await runAction(() => api.guideChatGPTAcknowledge())) planDialog.close();
+    },
+    'primary',
+  );
+  planDialog.append(
+    planTitle,
+    node(
+      'p',
+      '',
+      'Eligible AI requests in WorkWork use your ChatGPT plan and count toward its limits. You can manage usage in ChatGPT settings.',
+    ),
+    acknowledge,
+  );
+  const reviewPlan = button('Review plan usage', () => planDialog.showModal());
+  reviewPlan.hidden = true;
+  connection.append(reviewPlan);
+
   const context = node('div', 'guide-context');
   function updateContext() {
-    context.replaceChildren(
-      node(
-        'span',
-        '',
-        selected
-          ? `Discussing: ${selected.name}`
-          : 'The guide searches Forever for each new topic.',
-      ),
-    );
+    context.hidden = !selected;
+    context.replaceChildren();
     if (selected)
       context.append(
+        node('span', '', 'Discussing: ' + selected.name),
         button(
           'Clear entry',
           () => {
@@ -387,129 +441,283 @@ window.createGameGuide = function (api) {
   const transcript = node('div', 'guide-transcript');
   transcript.setAttribute('role', 'log');
   transcript.setAttribute('aria-label', 'Game guide conversation');
-  const askForm = node('form', 'guide-ask');
-  const question = input('Ask the guide', 'text', 2000);
-  question.field.placeholder = 'What stats does this item have?';
-  question.field.required = true;
-  const ask = node('button', 'primary', 'Ask');
-  ask.type = 'submit';
-  let configured = false,
-    answering = false;
-  function updateConfiguration(config) {
-    configured = config.configured;
-    provider.value = config.provider;
-    model.field.value = config.model;
-    ask.disabled = !configured;
-    remove.hidden = !configured;
-    setup.open = !configured;
-  }
-  setupForm.addEventListener('submit', async (event) => {
-    event.preventDefault();
-    save.disabled = true;
-    const response = await api
-      .guideConfigure({
-        provider: provider.value,
-        model: model.field.value.trim(),
-        key: key.field.value.trim(),
-      })
-      .catch(() => ({ ok: false, error: 'Could not save setup.' }));
-    key.field.value = '';
-    save.disabled = false;
-    if (!response.ok) {
-      message(response.error);
-      return;
-    }
-    updateConfiguration(response.value);
-    transcript.replaceChildren();
-    message('Setup saved. Ask a question to use your provider.');
-  });
-  askForm.addEventListener('submit', async (event) => {
-    event.preventDefault();
-    if (!configured || answering) return;
-    const prompt = question.field.value.trim();
-    if (!prompt) return;
-    answering = true;
-    ask.disabled = true;
-    clear.disabled = true;
-    save.disabled = true;
-    remove.disabled = true;
-    question.field.disabled = true;
-    const turn = node('article', 'guide-turn');
-    turn.append(
-      node('h3', '', prompt),
-      node('p', '', 'Looking up sources and preparing an answer…'),
+  transcript.setAttribute('aria-live', 'polite');
+  const empty = node('div', 'guide-chat-empty');
+  empty.append(node('p', '', 'Tell me what you’re working on.'));
+  const starters = node('div', 'guide-starters');
+  for (const [label, draft] of [
+    ['How do I complete this quest?', 'How do I complete [quest name]?'],
+    ['Where should I farm?', 'Where is the best place to farm [item or material]?'],
+    ['Which item should I use?', 'Which is better for my build: [first item] or [second item]?'],
+  ])
+    starters.append(
+      button(
+        label,
+        () => {
+          question.field.value = draft;
+          const start = draft.indexOf('[');
+          question.field.focus();
+          question.field.setSelectionRange(start, draft.indexOf(']') + 1);
+        },
+        'guide-starter',
+      ),
     );
-    transcript.append(turn);
-    turn.scrollIntoView({ block: 'nearest' });
-    message('The guide is working…');
-    const response = await api
-      .guideAsk(prompt, selected ? { type: selected.type, id: selected.id } : null)
-      .catch(() => ({ ok: false, error: 'Could not get an answer. Try again.' }));
-    turn.replaceChildren(node('h3', '', prompt));
-    if (response.ok) {
-      question.field.value = '';
-      turn.append(node('p', 'guide-answer', response.value.answer));
-      const sources = node('div', 'guide-citations');
-      response.value.sources.forEach((source, index) =>
-        sources.append(sourceLink(`[${source.citation ?? index + 1}] ${source.name}`, source.url)),
-      );
-      turn.append(
-        sources,
-        node(
-          'small',
-          'guide-note',
-          `${response.value.provider} · Check cited sources; AI can make mistakes.`,
-        ),
-      );
-      message('');
-    } else {
-      turn.append(node('p', '', response.error));
-      message('Answer unavailable. Your question is ready to retry.');
+  empty.append(starters);
+  const askForm = node('form', 'guide-ask');
+  const question = { wrap: node('label', 'guide-field'), field: node('textarea') };
+  question.wrap.append(node('span', 'guide-composer-label', 'Ask the guide'), question.field);
+  question.field.rows = 3;
+  question.field.maxLength = 2000;
+  question.field.placeholder = 'Name a quest, item, or farming goal…';
+  question.field.required = true;
+  const ask = node('button', 'primary', 'Send');
+  ask.type = 'submit';
+  question.field.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter' && !event.shiftKey && !event.isComposing) {
+      event.preventDefault();
+      askForm.requestSubmit();
     }
-    answering = false;
-    ask.disabled = false;
-    clear.disabled = false;
-    save.disabled = false;
-    remove.disabled = false;
-    question.field.disabled = false;
-    while (transcript.children.length > 10) transcript.firstElementChild.remove();
   });
+  const usage = node('div', 'guide-usage');
+  const usageLabel = node('span');
+  const manageUsage = button('Manage usage ↗', () => openUsage(), 'text-button');
+  async function openUsage() {
+    const response = await api
+      .guideChatGPTUsage()
+      .catch(() => ({ ok: false, error: 'Could not open ChatGPT usage settings.' }));
+    if (!response.ok) message(response.error);
+  }
+  usage.append(usageLabel, manageUsage);
   const clear = button(
     'New conversation',
     async () => {
-      const response = await api.guideClear(false);
-      if (!response.ok) {
-        message(response.error);
-        return;
-      }
-      transcript.replaceChildren();
-      selected = null;
-      updateContext();
-      question.field.value = '';
-      message('Conversation cleared.');
+      if (await runAction(() => api.guideClear(false), true)) question.field.value = '';
     },
     'text-button',
   );
-  askForm.append(question.wrap, ask);
-  chat.append(setup, context, transcript, askForm, clear);
-  updateContext();
-  root.append(
-    node(
-      'p',
-      'guide-note',
-      'Lookup and Conversation use a Forever database snapshot. Character uses the last saved in-game addon snapshot. Beta values may change.',
-    ),
+  const footer = node('div', 'guide-chat-footer');
+  footer.append(node('span', '', 'Enter to send · Shift+Enter for a new line'), clear);
+  const characterOption = node('label', 'guide-character-option');
+  const includeCharacter = node('input');
+  includeCharacter.type = 'checkbox';
+  characterOption.append(includeCharacter, node('span', '', 'Include saved character context'));
+  const characterNote = node(
+    'p',
+    'guide-character-note',
+    'Shares the latest saved level, gear, stats and location with your selected provider. Saved on /reload or logout; quest progress is not included.',
   );
+  const privacy = node(
+    'p',
+    'guide-note guide-chat-privacy',
+    'Questions, recent guide messages and selected entries go to your selected provider. Character context is optional; character names, realm, money and coding tasks are excluded.',
+  );
+
+  function resetTranscript() {
+    transcript.replaceChildren();
+    empty.hidden = false;
+    selected = null;
+    updateContext();
+  }
+  function updateDisabled() {
+    const busy = answering || settingsBusy || signingIn;
+    for (const control of [
+      signIn,
+      retrySignIn,
+      addAccount,
+      signOut,
+      account,
+      usePlan,
+      useAPI,
+      save,
+      remove,
+      clear,
+      acknowledge,
+      includeCharacter,
+    ])
+      control.disabled = busy;
+    ask.disabled = busy || !configured;
+    question.field.disabled = answering;
+    for (const starter of starters.children) starter.disabled = answering;
+    ask.textContent = answering ? 'Thinking…' : 'Send';
+    cancelSignIn.hidden = !signingIn;
+  }
+  function updateConfiguration(config) {
+    configuration = config;
+    configured = config.configured;
+    const auth = config.chatgpt || {};
+    const apiConfig = config.api || (config.provider !== 'chatgpt' ? config : {});
+    provider.value = apiConfig.provider || 'openai';
+    model.field.value = apiConfig.model || '';
+    const usingPlan = config.provider === 'chatgpt';
+    if (configured) options.insertBefore(connection, accounts);
+    else chat.prepend(connection);
+    connectionTitle.textContent = auth.connected ? 'ChatGPT connected' : 'Use your ChatGPT plan';
+    connectionNote.textContent =
+      auth.error ||
+      (auth.connected
+        ? (auth.email || 'Your account') +
+          (auth.planEnabled ? ' · Plan usage enabled' : ' · Plan usage not enabled')
+        : 'Connect an eligible Plus or Pro account to start chatting.');
+    signIn.hidden = Boolean(auth.connected && auth.planEnabled);
+    retrySignIn.hidden = !auth.registrationPending;
+    reviewPlan.hidden = !auth.connected || !auth.planEnabled || auth.usageAcknowledged;
+    accounts.hidden = !auth.accounts?.length;
+    account.replaceChildren(
+      ...(auth.accounts || []).map((saved) => {
+        const option = node('option', '', saved.label || saved.email || 'ChatGPT account');
+        option.value = saved.id;
+        return option;
+      }),
+    );
+    account.value = auth.accountId || '';
+    signOut.hidden = !auth.connected;
+    usePlan.hidden = usingPlan || !auth.connected;
+    useAPI.hidden = !apiConfig.configured || !usingPlan;
+    remove.hidden = !apiConfig.configured;
+    usageLabel.textContent = usingPlan
+      ? configured
+        ? 'Using ChatGPT plan'
+        : auth.connected
+          ? 'ChatGPT plan setup'
+          : 'Sign in to send a question'
+      : (config.provider === 'anthropic' ? 'Anthropic' : 'OpenAI') + ' API · Billed separately';
+    manageUsage.hidden = !usingPlan || !auth.connected;
+    updateDisabled();
+    showPlanDisclosure();
+    if (auth.revocationUnconfirmed)
+      message(
+        'Signed out locally. To finish disconnecting, remove WorkWork in ChatGPT’s Security and login settings.',
+      );
+  }
+  function showPlanDisclosure() {
+    if (!reviewPlan.hidden && planDialog.isConnected && !planDialog.open) planDialog.showModal();
+  }
+  async function runAction(action, reset = false) {
+    settingsBusy = true;
+    updateDisabled();
+    let response;
+    try {
+      response = await action();
+    } catch {
+      response = { ok: false, error: 'Could not update the guide connection. Try again.' };
+    }
+    settingsBusy = false;
+    if (response.ok) {
+      if (reset) resetTranscript();
+      message('');
+      updateConfiguration(response.value);
+    } else {
+      message(response.error);
+      const status = await api.guideStatus().catch(() => null);
+      if (status?.ok) updateConfiguration(status.value);
+    }
+    updateDisabled();
+    return response.ok;
+  }
+  async function connect(action) {
+    signingIn = true;
+    updateDisabled();
+    message('Finish signing in with ChatGPT in your browser. Your draft will stay here.');
+    await runAction(
+      () =>
+        api.guideChatGPTSignIn(action || (configuration.chatgpt?.connected ? 'enable' : undefined)),
+      true,
+    );
+    signingIn = false;
+    updateDisabled();
+  }
+  setupForm.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const next = {
+      provider: provider.value,
+      model: model.field.value.trim(),
+      key: key.field.value.trim(),
+    };
+    key.field.value = '';
+    if (await runAction(() => api.guideConfigure(next), true)) {
+      setup.open = false;
+      options.open = false;
+    }
+  });
+  askForm.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    if (!configured || answering || settingsBusy || signingIn) return;
+    const prompt = question.field.value.trim();
+    if (!prompt) return;
+    answering = true;
+    updateDisabled();
+    empty.hidden = true;
+    const turn = node('article', 'guide-turn');
+    const userMessage = () => node('h3', 'guide-question', prompt);
+    turn.append(
+      node('span', 'eyebrow', 'YOU'),
+      userMessage(),
+      node('p', 'guide-answer-pending', 'Thinking…'),
+    );
+    transcript.append(turn);
+    transcript.scrollTop = transcript.scrollHeight;
+    const response = await api
+      .guideAsk(prompt, selected, includeCharacter.checked)
+      .catch(() => ({ ok: false, error: 'Could not get an answer. Try again.' }));
+    turn.replaceChildren(node('span', 'eyebrow', 'YOU'), userMessage());
+    if (response.ok) {
+      question.field.value = '';
+      turn.append(
+        node('span', 'eyebrow guide-speaker', 'GUIDE'),
+        node('p', 'guide-answer', response.value.answer),
+      );
+      const sources = node('div', 'guide-citations');
+      response.value.sources.forEach((source, index) =>
+        sources.append(
+          sourceLink('[' + (source.citation ?? index + 1) + '] ' + source.name, source.url),
+        ),
+      );
+      turn.append(sources);
+      message('');
+    } else {
+      turn.append(node('p', 'guide-answer-error', response.error));
+      if (response.code === 'usage_limit')
+        turn.append(button('Manage usage', () => openUsage(), 'primary'));
+      if (response.code === 'reconnect')
+        turn.append(button('Continue with ChatGPT', () => connect()));
+      message('Your question is ready to retry.');
+    }
+    answering = false;
+    updateDisabled();
+    while (transcript.children.length > 10) transcript.firstElementChild.remove();
+    transcript.scrollTop = transcript.scrollHeight;
+    const status = await api.guideStatus().catch(() => null);
+    if (status?.ok) updateConfiguration(status.value);
+    question.field.focus();
+  });
+  askForm.append(question.wrap, ask);
+  chat.append(
+    connection,
+    context,
+    empty,
+    transcript,
+    askForm,
+    characterOption,
+    characterNote,
+    usage,
+    footer,
+    options,
+    privacy,
+  );
+  root.append(planDialog);
+  updateContext();
+  updateDisabled();
   api
     .guideStatus()
     .then((response) => {
       if (response.ok) updateConfiguration(response.value);
       else message(response.error);
     })
-    .catch(() => message('Conversation setup is unavailable.'));
+    .catch(() => message('Guide setup is unavailable.'));
   return {
     mount(container) {
       container.replaceChildren(root);
+      showPlanDisclosure();
     },
   };
 };

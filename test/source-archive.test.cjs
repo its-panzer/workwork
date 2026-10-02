@@ -22,28 +22,30 @@ function fixture(t) {
 test('source archive includes the manifest and optional license but excludes local files', (t) => {
   const { root, write } = fixture(t);
   write('LICENSE', 'Fixture license\n');
-  for (const file of [
+  const excludedFiles = [
     '.env',
     '.impeccable.md',
     'personal.md',
     'docs/private.md',
+    'docs/LOCAL_RECOVERY_STATUS.md',
+    'forever-character-for-gaming.json',
     'app/assets/private.png',
     'src/settings.json',
     'node_modules/private.js',
     'artifacts/screenshot.png',
     'artifacts/workwork-source.tar.gz',
-  ])
-    write(file, 'must not be distributed\n');
-  const { output, files } = createSourceArchive(root);
+  ];
+  for (const file of excludedFiles) write(file, 'must not be distributed\n');
+  const { output } = createSourceArchive(root);
   assert.equal(output, path.join(root, 'artifacts', 'workwork-source.tar.gz'));
   const entries = execFileSync('tar', ['-tzf', output], { encoding: 'utf8' })
     .trim()
     .split(/\r?\n/)
     .filter((entry) => !entry.endsWith('/'))
     .sort();
-  assert.deepEqual(entries, files.map((file) => `workwork/${file}`).sort());
-  assert.ok(files.includes('package-lock.json'));
-  assert.ok(files.includes('LICENSE'));
+  for (const file of excludedFiles) assert.ok(!entries.includes(`workwork/${file}`), file);
+  assert.ok(entries.includes('workwork/package-lock.json'));
+  assert.ok(entries.includes('workwork/LICENSE'));
   const tar = zlib.gunzipSync(fs.readFileSync(output));
   for (let offset = 0; offset < tar.length;) {
     const header = tar.subarray(offset, offset + 512);

@@ -4,7 +4,7 @@ const path = require('node:path');
 const { atomicJSON } = require('./storage.cjs');
 
 const FILE = 'WorkworkCharacter.lua';
-const VARIABLE = 'WorkworkCharacterSnapshot';
+const ADDON_FILES = ['WorkworkCharacter.toc', FILE];
 const MAX_BYTES = 256000;
 
 function decode(value) {
@@ -22,9 +22,9 @@ function text(value, max = 500) {
   return decoded;
 }
 
-function number(value) {
+function number(value, min = 0) {
   const parsed = Number(value);
-  if (!Number.isFinite(parsed) || parsed < 0 || parsed > 1e12)
+  if (!Number.isFinite(parsed) || parsed < min || parsed > 1e12)
     throw Error('The character snapshot has an invalid number.');
   return parsed;
 }
@@ -64,7 +64,7 @@ function parseSnapshot(source) {
         for (const pair of decode(fields[5]).split(',')) {
           const equal = pair.indexOf('=');
           if (equal < 1) throw Error('The character snapshot has invalid equipment stats.');
-          stats[text(pair.slice(0, equal), 100)] = number(decode(pair.slice(equal + 1)));
+          stats[text(pair.slice(0, equal), 100)] = number(decode(pair.slice(equal + 1)), -1e12);
         }
       }
       result.equipment.push({
@@ -139,6 +139,31 @@ function readLatestCharacter(gameDirectories = defaultGameDirectories()) {
   return result;
 }
 
+function characterForGuide(snapshot) {
+  if (!snapshot) return null;
+  return {
+    savedAt: snapshot.savedAt,
+    capturedAt: snapshot.capturedAt,
+    clientVersion: snapshot.clientVersion,
+    level: snapshot.level,
+    class: snapshot.class,
+    race: snapshot.race,
+    specialization: snapshot.specialization,
+    zone: snapshot.zone,
+    stats: Object.fromEntries(
+      Object.entries(snapshot.stats)
+        .slice(0, 40)
+        .map(([key, value]) => [key, value.effective]),
+    ),
+    equipment: snapshot.equipment.map(({ slot, itemId, name, stats }) => ({
+      slot,
+      itemId,
+      name,
+      stats: Object.fromEntries(Object.entries(stats).slice(0, 30)),
+    })),
+  };
+}
+
 function exportForGamingBot(data, file) {
   if (!data) throw Error('No character snapshot is available yet.');
   const payload = {
@@ -158,7 +183,13 @@ function installCharacterAddon(sourceDirectory, gameDirectories = defaultGameDir
       'Forever AddOns folder not found. Set WORKWORK_WOW_DIR to your Forever game folder.',
     );
   const destination = path.join(gameDirectory, 'Interface', 'AddOns', 'WorkworkCharacter');
-  for (const name of ['WorkworkCharacter.toc', 'WorkworkCharacter.lua']) {
+  try {
+    if (!fs.lstatSync(destination).isDirectory())
+      throw Error('The WorkworkCharacter destination must be a directory, not a symbolic link.');
+  } catch (error) {
+    if (error.code !== 'ENOENT') throw error;
+  }
+  for (const name of ADDON_FILES) {
     const source = path.join(sourceDirectory, name);
     const target = path.join(destination, name);
     try {
@@ -176,7 +207,7 @@ function installCharacterAddon(sourceDirectory, gameDirectories = defaultGameDir
     }
   }
   fs.mkdirSync(destination, { recursive: true });
-  for (const name of ['WorkworkCharacter.toc', 'WorkworkCharacter.lua']) {
+  for (const name of ADDON_FILES) {
     const source = path.join(sourceDirectory, name);
     const target = path.join(destination, name);
     fs.copyFileSync(source, target);
@@ -187,6 +218,7 @@ function installCharacterAddon(sourceDirectory, gameDirectories = defaultGameDir
 module.exports = {
   parseSnapshot,
   readLatestCharacter,
+  characterForGuide,
   exportForGamingBot,
   installCharacterAddon,
   defaultGameDirectories,
